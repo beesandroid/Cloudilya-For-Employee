@@ -13,6 +13,16 @@ class _NotiState extends State<Noti> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Notification'),
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade900, Colors.blue.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         backgroundColor: Colors.white, // Customize the background color if needed
       ),
       body: Center(

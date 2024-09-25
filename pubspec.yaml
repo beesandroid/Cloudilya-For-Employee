@@ -72,6 +72,7 @@ dependencies:
   firebase_messaging:
   dropdown_search:
   flutter_typeahead: ^4.0.0
+  google_fonts:
 
 
 dev_dependencies:
@@ -100,6 +101,7 @@ flutter:
   assets:
      - assets/image.png
      - assets/profilepic.png
+     - assets/IMG_0065.png
 
   #   - images/a_dot_ham.jpeg
 

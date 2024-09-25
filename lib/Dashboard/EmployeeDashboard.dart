@@ -1,12 +1,11 @@
 import 'package:cloudilyaemployee/Leave/Leave%20Application.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
-
 import '../ApprovalDisplay/Approvals.dart';
 import '../CustomDrawer/CustomDrawer.dart';
 import '../Notification/Notification.dart';
 import '../Timetable/TimeTable.dart';
-import 'Dahboard.dart';
+import 'Dashboard.dart';
 
 class EmpDashboard extends StatefulWidget {
   @override
@@ -16,14 +15,14 @@ class EmpDashboard extends StatefulWidget {
 class _EmpDashboardState extends State<EmpDashboard> {
   late PersistentTabController _controller;
 
-  _EmpDashboardState() : _controller = PersistentTabController(initialIndex: 0);
+  _EmpDashboardState() : _controller = PersistentTabController(initialIndex: 2);
 
   List<Widget> _buildScreens() {
     return [
       Approvals(),
       EmployeeTimeTableScreen(),
-      DashboardHomePage(), // Assuming this is the Dashboard screen
-      LeaveApplicationScreen(), // Assuming this is another screen, replace with the actual screen name
+      DashboardHomePage(),
+      LeaveApplicationScreen(),
     ];
   }
 
@@ -31,7 +30,7 @@ class _EmpDashboardState extends State<EmpDashboard> {
     'Approvals',
     'Time Table',
     'Dashboard',
-    'Notifications', // Corresponding title for the new screen
+    'Leave', // Corresponding title for the new screen
   ];
 
   List<PersistentBottomNavBarItem> _navBarsItems() {
@@ -55,8 +54,8 @@ class _EmpDashboardState extends State<EmpDashboard> {
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.notifications),
-        title: ("Notifications"),
+        icon: Icon(Icons.time_to_leave),
+        title: ("Leave"),
         activeColorPrimary: Colors.blueAccent,
         inactiveColorPrimary: Colors.grey,
       ),
@@ -76,7 +75,8 @@ class _EmpDashboardState extends State<EmpDashboard> {
           IconButton(
             icon: Icon(Icons.notifications, color: Colors.black),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => Noti()));
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => Noti()));
             },
           ),
         ],

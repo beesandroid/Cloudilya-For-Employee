@@ -70,53 +70,49 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
       Uri.parse(
           'https://beessoftware.cloud/CoreAPIPreprod/CloudilyaMobileAPP/SaveEmployeePersonalDetails'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(
-          {
-            "GrpCode": "bees",
-            "ColCode": "0001",
-            "CollegeId": 1,
-            "UserId": 1,
-            "EmployeeId": "2",
-            "FirstName": "",
-            "LastName": "",
-            "id": 0,
-            "StartDate": "",
-            "EndDate": "",
-            "EffectiveDate": "",
-            "PrefixId": 0,
-            "PreferredName": "",
-            "DateOfBirth": "",
-            "MaritalStatus": 0,
-            "ChangeReason":"",
-            "Nationality": 0,
-            "Religion": 0,
-            "CasteCategory": 0,
-            "Caste": 0,
-            "DriversLicenseNumber": "",
-            "DriversLicenseExpiryDate": "",
-            "PassportNumber": "",
-            "PassportExpiryDate": "",
-            "RationCardNumber": "",
-            "AICTEId": "",
-            "UniversityId": "",
-            "BiometricId": "",
-            "VoterId": "",
-            "OfficePhoneNumber": "",
-            "PersonalPhoneNumber": "",
-            "OfficeEmailAddress": "",
-            "PersonalEmailAddress": "",
-            "LoginIpAddress": "",
-            "LoginSystemName": "",
-            "FatherName": "",
-            "Flag": "VIEW",
-            "CountryOfBirth":0,
-            "BloodGroup": 0,
-            "PANCardNumber": "",
-            "ProvidentFundNumber": ""
-
-          }
-
-      ),
+      body: jsonEncode({
+        "GrpCode": "beesDEV",
+        "ColCode": "0001",
+        "CollegeId": 1,
+        "UserId": 1,
+        "EmployeeId": "2",
+        "FirstName": "",
+        "LastName": "",
+        "id": 0,
+        "StartDate": "",
+        "EndDate": "",
+        "EffectiveDate": "",
+        "PrefixId": 0,
+        "PreferredName": "",
+        "DateOfBirth": "",
+        "MaritalStatus": 0,
+        "ChangeReason": "",
+        "Nationality": 0,
+        "Religion": 0,
+        "CasteCategory": 0,
+        "Caste": 0,
+        "DriversLicenseNumber": "",
+        "DriversLicenseExpiryDate": "",
+        "PassportNumber": "",
+        "PassportExpiryDate": "",
+        "RationCardNumber": "",
+        "AICTEId": "",
+        "UniversityId": "",
+        "BiometricId": "",
+        "VoterId": "",
+        "OfficePhoneNumber": "",
+        "PersonalPhoneNumber": "",
+        "OfficeEmailAddress": "",
+        "PersonalEmailAddress": "",
+        "LoginIpAddress": "",
+        "LoginSystemName": "",
+        "FatherName": "",
+        "Flag": "VIEW",
+        "CountryOfBirth": 0,
+        "BloodGroup": 0,
+        "PANCardNumber": "",
+        "ProvidentFundNumber": ""
+      }),
     );
 
     if (response.statusCode == 200) {
@@ -125,16 +121,23 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
         print('Parsed Data: $data');
 
         setState(() {
-          _employeeData = data['employeePersonalList'] != null && data['employeePersonalList'].isNotEmpty
+          _employeeData = data['employeePersonalList'] != null &&
+                  data['employeePersonalList'].isNotEmpty
               ? data['employeePersonalList'][0]
               : {};
 
-          casteCategoryList = List<Map<String, dynamic>>.from(data['employeePersonalList'][0]['casteCategoryList'] ?? []);
-          casteList = List<Map<String, dynamic>>.from(data['employeePersonalList'][0]['castList'] ?? []);
-          religionList = List<Map<String, dynamic>>.from(data['employeePersonalList'][0]['religionList'] ?? []);
-          nationalityList = List<Map<String, dynamic>>.from(data['employeePersonalList'][0]['nationalityStatusList'] ?? []);
-          maritalStatusList = List<Map<String, dynamic>>.from(data['employeePersonalList'][0]['maritalStatusList'] ?? []);
-          prefixList = List<Map<String, dynamic>>.from(data['employeePersonalList'][0]['prefixList'] ?? []);
+          casteCategoryList = List<Map<String, dynamic>>.from(
+              data['employeePersonalList'][0]['casteCategoryList'] ?? []);
+          casteList = List<Map<String, dynamic>>.from(
+              data['employeePersonalList'][0]['castList'] ?? []);
+          religionList = List<Map<String, dynamic>>.from(
+              data['employeePersonalList'][0]['religionList'] ?? []);
+          nationalityList = List<Map<String, dynamic>>.from(
+              data['employeePersonalList'][0]['nationalityStatusList'] ?? []);
+          maritalStatusList = List<Map<String, dynamic>>.from(
+              data['employeePersonalList'][0]['maritalStatusList'] ?? []);
+          prefixList = List<Map<String, dynamic>>.from(
+              data['employeePersonalList'][0]['prefixList'] ?? []);
 
           print('Caste Category List: $casteCategoryList');
           print('Caste List: $casteList');
@@ -143,14 +146,12 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
           print('Marital Status List: $maritalStatusList');
           print('Prefix List: $prefixList');
         });
-
       } catch (e) {
         print('Error parsing JSON: $e');
       }
     } else {
       print('Failed to load data');
     }
-
   }
 
   Future<void> _updateEmployeeDetails() async {
@@ -161,22 +162,26 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
       "UserId": 1,
       "EmployeeId": _employeeData['employeeId'] ?? '',
       "FirstName": _controllers['firstName']?.text ?? '',
-      "id":"0",
-      "startDate":"",
-      "endDate":"",
-      "effectiveDate":"",
-      "changeReason":"",
-      "prefixId":int.tryParse(_controllers['prefixList']?.text ?? '0') ?? 0,
+      "id": "0",
+      "startDate": "",
+      "endDate": "",
+      "effectiveDate": "",
+      "changeReason": "",
+      "prefixId": int.tryParse(_controllers['prefixList']?.text ?? '0') ?? 0,
       "LastName": _controllers['lastName']?.text ?? '',
       "PreferredName": _controllers['preferredName']?.text ?? '',
       "DateOfBirth": _controllers['dateOfBirth']?.text ?? '',
-      "MaritalStatus": int.tryParse(_controllers['maritalStatus']?.text ?? '0') ?? 0,
-      "Nationality": int.tryParse(_controllers['nationality']?.text ?? '0') ?? 0,
+      "MaritalStatus":
+          int.tryParse(_controllers['maritalStatus']?.text ?? '0') ?? 0,
+      "Nationality":
+          int.tryParse(_controllers['nationality']?.text ?? '0') ?? 0,
       "Religion": int.tryParse(_controllers['religion']?.text ?? '0') ?? 0,
-      "CasteCategory": int.tryParse(_controllers['casteCategory']?.text ?? '0') ?? 0,
+      "CasteCategory":
+          int.tryParse(_controllers['casteCategory']?.text ?? '0') ?? 0,
       "Caste": int.tryParse(_controllers['caste']?.text ?? '0') ?? 0,
       "DriversLicenseNumber": _controllers['driversLicenseNumber']?.text ?? '',
-      "DriversLicenseExpiryDate": _controllers['driversLicenseExpiryDate']?.text ?? '',
+      "DriversLicenseExpiryDate":
+          _controllers['driversLicenseExpiryDate']?.text ?? '',
       "PassportNumber": _controllers['passportNumber']?.text ?? '',
       "PassportExpiryDate": _controllers['passportExpiryDate']?.text ?? '',
       "RationCardNumber": _controllers['rationCardNumber']?.text ?? '',
@@ -189,13 +194,14 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
       "OfficeEmailAddress": _controllers['officeEmailAddress']?.text ?? '',
       "PersonalEmailAddress": _controllers['personalEmailAddress']?.text ?? '',
       "FatherName": _controllers['fatherName']?.text ?? '',
-      "CountryOfBirth": int.tryParse(_controllers['countryOfBirth']?.text ?? '0') ?? 0,
+      "CountryOfBirth":
+          int.tryParse(_controllers['countryOfBirth']?.text ?? '0') ?? 0,
       "BloodGroup": int.tryParse(_controllers['bloodGroup']?.text ?? '0') ?? 0,
       "PANCardNumber": _controllers['panCardNumber']?.text ?? '',
       "ProvidentFundNumber": _controllers['providentFundNumber']?.text ?? '',
       "Flag": "OVERWRITE",
-      "loginIpAddress":"",
-      "loginSystemName":"",
+      "loginIpAddress": "",
+      "loginSystemName": "",
       // Added lookUpId here
     };
 
@@ -226,12 +232,14 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
       // or
       //  Navigator.of(context).popUntil((route) => route.isFirst);
       if (data['maritalStatusList'] != null) {
-        maritalStatusList = List<Map<String, dynamic>>.from(data['maritalStatusList']);
+        maritalStatusList =
+            List<Map<String, dynamic>>.from(data['maritalStatusList']);
       } else {
         maritalStatusList = [];
       }
       if (data['nationalityStatusList'] != null) {
-        nationalityList = List<Map<String, dynamic>>.from(data['nationalityStatusList']);
+        nationalityList =
+            List<Map<String, dynamic>>.from(data['nationalityStatusList']);
       } else {
         nationalityList = [];
       }
@@ -241,7 +249,8 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
         religionList = [];
       }
       if (data['casteCategoryList'] != null) {
-        casteCategoryList = List<Map<String, dynamic>>.from(data['casteCategoryList']);
+        casteCategoryList =
+            List<Map<String, dynamic>>.from(data['casteCategoryList']);
       } else {
         casteCategoryList = [];
       }
@@ -249,7 +258,8 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
         casteList = List<Map<String, dynamic>>.from(data['castList']);
       } else {
         casteList = [];
-      }  if (data['prefixList'] != null) {
+      }
+      if (data['prefixList'] != null) {
         prefixList = List<Map<String, dynamic>>.from(data['prefixList']);
       } else {
         prefixList = [];
@@ -257,15 +267,19 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
       try {
         final data = jsonDecode(response.body);
         setState(() {
-          _employeeData = data['employeePersonalList'] != null && data['employeePersonalList'].isNotEmpty
+          _employeeData = data['employeePersonalList'] != null &&
+                  data['employeePersonalList'].isNotEmpty
               ? data['employeePersonalList'][0]
               : {};
 
-          casteCategoryList = List<dynamic>.from(data['casteCategoryList'] ?? []);
+          casteCategoryList =
+              List<dynamic>.from(data['casteCategoryList'] ?? []);
           casteList = List<dynamic>.from(data['castList'] ?? []);
           religionList = List<dynamic>.from(data['religionList'] ?? []);
-          nationalityList = List<dynamic>.from(data['nationalityStatusList'] ?? []);
-          maritalStatusList = List<dynamic>.from(data['maritalStatusList'] ?? []);
+          nationalityList =
+              List<dynamic>.from(data['nationalityStatusList'] ?? []);
+          maritalStatusList =
+              List<dynamic>.from(data['maritalStatusList'] ?? []);
           prefixList = List<dynamic>.from(data['prefixList'] ?? []);
 
           print('Caste Category List: $casteCategoryList');
@@ -291,13 +305,24 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Employee Personal Information'),
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade900, Colors.blue.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text(
+          'Employee Personal Information',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         backgroundColor: Colors.white,
         actions: [
           IconButton(
@@ -317,44 +342,55 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
       body: _employeeData.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              _buildDropdownField('prefixList', 'prefixId', prefixList, 'lookUpId', 'meaning'),
-
-
-              _buildTextField('First Name', 'firstName'),
-              _buildTextField('Last Name', 'lastName'),
-              _buildTextField('Preferred Name', 'preferredName'),
-              _buildTextField('Date of Birth', 'dateOfBirth'),
-              _buildDropdownField('Marital Status', 'maritalStatus', maritalStatusList, 'lookUpId', 'meaning'),
-              _buildDropdownField('Nationality', 'nationality', nationalityList, 'lookUpId', 'meaning'),
-              _buildDropdownField('Religion', 'religion', religionList, 'lookUpId', 'meaning'),
-              _buildDropdownField('Caste Category', 'casteCategory', casteCategoryList, 'lookUpId', 'meaning'),
-              _buildDropdownField('Caste', 'caste', casteList, 'lookUpId', 'meaning'),
-              _buildTextField('Driver\'s License Number', 'driversLicenseNumber'),
-              _buildTextField('Driver\'s License Expiry Date', 'driversLicenseExpiryDate'),
-              _buildTextField('Passport Number', 'passportNumber'),
-              _buildTextField('Passport Expiry Date', 'passportExpiryDate'),
-              _buildTextField('Ration Card Number', 'rationCardNumber'),
-              _buildTextField('AICTE ID', 'aicteId'),
-              _buildTextField('University ID', 'universityId'),
-              _buildTextField('Biometric ID', 'biometricId'),
-              _buildTextField('Voter ID', 'voterId'),
-              _buildTextField('Office Phone Number', 'officePhoneNumber'),
-              _buildTextField('Personal Phone Number', 'personalPhoneNumber'),
-              _buildTextField('Office Email Address', 'officeEmailAddress'),
-              _buildTextField('Personal Email Address', 'personalEmailAddress'),
-              _buildTextField('Father\'s Name', 'fatherName'),
-              _buildTextField('Country of Birth', 'countryOfBirth'),
-              _buildTextField('Blood Group', 'bloodGroup'),
-              _buildTextField('PAN Card Number', 'panCardNumber'),
-              _buildTextField('Provident Fund Number', 'providentFundNumber'),
-            ],
-          ),
-        ),
-      ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    _buildDropdownField('PrefixList', 'prefixId', prefixList,
+                        'lookUpId', 'meaning'),
+                    _buildTextField('First Name', 'firstName'),
+                    _buildTextField('Last Name', 'lastName'),
+                    _buildTextField('Preferred Name', 'preferredName'),
+                    _buildTextField('Date of Birth', 'dateOfBirth'),
+                    _buildDropdownField('Marital Status', 'maritalStatus',
+                        maritalStatusList, 'lookUpId', 'meaning'),
+                    _buildDropdownField('Nationality', 'nationality',
+                        nationalityList, 'lookUpId', 'meaning'),
+                    _buildDropdownField('Religion', 'religion', religionList,
+                        'lookUpId', 'meaning'),
+                    _buildDropdownField('Caste Category', 'casteCategory',
+                        casteCategoryList, 'lookUpId', 'meaning'),
+                    _buildDropdownField(
+                        'Caste', 'caste', casteList, 'lookUpId', 'meaning'),
+                    _buildTextField(
+                        'Driver\'s License Number', 'driversLicenseNumber'),
+                    _buildTextField('Driver\'s License Expiry Date',
+                        'driversLicenseExpiryDate'),
+                    _buildTextField('Passport Number', 'passportNumber'),
+                    _buildTextField(
+                        'Passport Expiry Date', 'passportExpiryDate'),
+                    _buildTextField('Ration Card Number', 'rationCardNumber'),
+                    _buildTextField('AICTE ID', 'aicteId'),
+                    _buildTextField('University ID', 'universityId'),
+                    _buildTextField('Biometric ID', 'biometricId'),
+                    _buildTextField('Voter ID', 'voterId'),
+                    _buildTextField('Office Phone Number', 'officePhoneNumber'),
+                    _buildTextField(
+                        'Personal Phone Number', 'personalPhoneNumber'),
+                    _buildTextField(
+                        'Office Email Address', 'officeEmailAddress'),
+                    _buildTextField(
+                        'Personal Email Address', 'personalEmailAddress'),
+                    _buildTextField('Father\'s Name', 'fatherName'),
+                    _buildTextField('Country of Birth', 'countryOfBirth'),
+                    _buildTextField('Blood Group', 'bloodGroup'),
+                    _buildTextField('PAN Card Number', 'panCardNumber'),
+                    _buildTextField(
+                        'Provident Fund Number', 'providentFundNumber'),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
@@ -363,11 +399,12 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
         enabled: _isEditing,
-        controller: _controllers[key]?..text = _employeeData[key]?.toString() ?? '',
+        controller: _controllers[key]
+          ?..text = _employeeData[key]?.toString() ?? '',
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold),
+          labelStyle:
+              TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.black, width: 2),
@@ -376,8 +413,8 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.black, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         onChanged: (value) {
           setState(() {
@@ -389,12 +426,12 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
   }
 
   Widget _buildDropdownField(
-      String label,
-      String key,
-      List<dynamic> options,
-      String optionKey,
-      String optionValue,
-      ) {
+    String label,
+    String key,
+    List<dynamic> options,
+    String optionKey,
+    String optionValue,
+  ) {
     String? selectedValue = _employeeData[key]?.toString();
 
     // Ensure that options list contains unique values for the dropdown
@@ -402,7 +439,8 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
 
     // Check if the selected value is in the uniqueOptions list
     if (selectedValue != null &&
-        !uniqueOptions.any((item) => item[optionKey].toString() == selectedValue)) {
+        !uniqueOptions
+            .any((item) => item[optionKey].toString() == selectedValue)) {
       selectedValue = null; // reset selected value if it's not in options
     }
 
@@ -433,16 +471,13 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
         }).toList(),
         onChanged: _isEditing
             ? (value) {
-          setState(() {
-            _employeeData[key] = value;
-            _controllers[key]?.text = value ?? '';
-          });
-        }
+                setState(() {
+                  _employeeData[key] = value;
+                  _controllers[key]?.text = value ?? '';
+                });
+              }
             : null,
       ),
     );
   }
-
-
-
 }

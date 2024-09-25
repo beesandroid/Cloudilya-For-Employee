@@ -273,7 +273,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     int absentCount = _filteredStudents.length - presentCount;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Attendance Screen'),
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade900, Colors.blue.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: Text('Attendance Screen',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
         backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -892,7 +902,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final String currentDatetime =
     DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     final Map<String, dynamic> requestBody = {
-      "GrpCode": "Bees",
+      "GrpCode": "Beesdev",
       "ColCode": "0001",
       "Date": formattedDate,
       "ProgramId": "0",
@@ -972,7 +982,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/TopicDropDown';
 
     final Map<String, dynamic> requestBody = {
-      "GrpCode": "Bees",
+      "GrpCode": "Beesdev",
       "ColCode": "0001",
       "EmployeeId": "1088",
       "Period": periodNumber,
@@ -1065,7 +1075,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
 
     final Map<String, dynamic> requestBody = {
-      "GrpCode": "bees",
+      "GrpCode": "Beesdev",
       "ColCode": "0001",
       "CollegeId": "1",
       "EmployeeId": "1088",

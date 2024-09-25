@@ -397,7 +397,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
     var dateFormat = DateFormat('yyyy-MM-dd'); // Define the output date format
     var inputDateFormat = DateFormat('dd-MM-yyyy');
     var payload = {
-      "GrpCode": "Bees",
+      "GrpCode": "Beesdev",
       "CollegeId": "1",
       "ColCode": "0001",
       "EmployeeId": "2",
@@ -551,15 +551,11 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text('Leave Application',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-        elevation: 0,
-      ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        child:
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           DropdownButtonFormField<dynamic>(
             decoration: InputDecoration(
               labelText: 'Select Leave Type',

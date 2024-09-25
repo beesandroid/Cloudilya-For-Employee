@@ -13,7 +13,7 @@ class LeaveService {
       },
       body: json.encode(
           {
-        "GrpCode": "bees",
+        "GrpCode": "beesdev",
         "ColCode": "0001",
         "CollegeId": "1",
         "EmployeeId": "1",
@@ -43,7 +43,7 @@ class LeaveService {
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode({
-        "GrpCode": "Bees",
+        "GrpCode": "Beesdev",
         "ColCode": "0001",
         "AcYear": "2024 - 2025",
         "UserTypeName": "STUDENT",

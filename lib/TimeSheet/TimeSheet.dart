@@ -1,354 +1,433 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
-class TimeSheet extends StatefulWidget {
-  const TimeSheet({super.key});
+class TimeSheetPage extends StatefulWidget {
+  const TimeSheetPage({super.key});
 
   @override
-  State<TimeSheet> createState() => _TimeSheetState();
+  State<TimeSheetPage> createState() => _TimeSheetPageState();
 }
 
-class _TimeSheetState extends State<TimeSheet> {
-  List<TimeSheetEntry> entries = [];
+class _TimeSheetPageState extends State<TimeSheetPage> {
+  DateTime? fromDate;
+  DateTime? toDate;
+  List<dynamic> timeSheetData = [];
+  bool isLoading = false;
+
+  // Form fields for adding/updating timesheet
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController taskIdController = TextEditingController();
+  TextEditingController dateController = TextEditingController();
+  TextEditingController startTimeController = TextEditingController();
+  TextEditingController endTimeController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  int? detailId; // For update purposes
+
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTimeSheetData();
+  }
+  Future<void> selectDate(BuildContext context) async {
+    DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (selectedDate != null) {
+      setState(() {
+        // Format date to 'yyyy-MM-dd' and set to controller
+        dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+      });
+    }
+  }
+  Future<void> fetchTimeSheetData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    String fromDateStr = fromDate != null ? DateFormat('yyyy-MM-dd').format(fromDate!) : "";
+    String toDateStr = toDate != null ? DateFormat('yyyy-MM-dd').format(toDate!) : "";
+
+    var response = await http.post(
+      Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/TimeSheetDisplayForEmployee'),
+      body: json.encode({
+        "GrpCode": "BEESDEV",
+        "ColCode": "0001",
+        "CollegeId": "1",
+        "EmployeeId": 9,
+        "FromDate": fromDateStr,
+        "ToDate": toDateStr
+      }),
+      headers: {"Content-Type": "application/json"},
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        timeSheetData = json.decode(response.body)['timeSheetDisplayForEmployeeList'];
+      });
+    } else {
+      print('Failed to fetch data');
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> addOrUpdateTimeSheet({String flag = "CREATE"}) async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        // Validate date format before parsing
+        if (dateController.text.isEmpty) {
+          throw FormatException("Date cannot be empty");
+        }
+        // Parse the date
+        DateTime date = DateTime.parse(dateController.text);
+
+        var requestBody = {
+          "GrpCode": "BEESDEV",
+          "ColCode": "0001",
+          "CollegeId": "1",
+          "TimeSheetId": 1256,
+          "EmployeeId": 9,
+          "Date": DateFormat('yyyy-MM-dd').format(date), // Ensure it's formatted correctly
+          "DetailId": detailId ?? 23396,
+          "UserId": 1,
+          "LoginIpAddress": "",
+          "LoginSystemName": "",
+          "Flag": flag,
+          "SaveEmployeeTimeSheetVariable": [
+            {
+              "DetailId": detailId ?? 23396,
+              "TimeSheetId": 1256,
+              "TaskId": int.parse(taskIdController.text),
+              "Date": DateFormat('yyyy-MM-dd').format(date), // Format here as well
+              "StartTime": startTimeController.text,
+              "EndTime": endTimeController.text,
+              "Hours": (DateTime.parse(endTimeController.text).difference(DateTime.parse(startTimeController.text)).inHours),
+              "Description": descriptionController.text,
+              "Status": 0
+            }
+          ]
+        };
+
+        var response = await http.post(
+          Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/SaveEmployeeTimeSheetSummary'),
+          body: json.encode(requestBody),
+          headers: {"Content-Type": "application/json"},
+        );
+
+        if (response.statusCode == 200) {
+          Navigator.of(context).pop(); // Close the dialog
+          fetchTimeSheetData(); // Refresh data
+        } else {
+          print('Failed to save data');
+        }
+      } catch (e) {
+        // Handle any exceptions, including FormatException
+        print('Error: $e');
+        // Optionally show a dialog to inform the user
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Error"),
+              content: Text("Please enter a valid date format (YYYY-MM-DD)"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
+  Future<void> pickDateRange() async {
+    DateTimeRange? dateRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (dateRange != null) {
+      setState(() {
+        fromDate = dateRange.start;
+        toDate = dateRange.end;
+      });
+      fetchTimeSheetData();
+    }
+  }
+
+  void showAddTimeSheetDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Add Time Sheet"),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: taskIdController,
+                  decoration: InputDecoration(labelText: "Task ID"),
+                  keyboardType: TextInputType.number,
+                  validator: (value) => value!.isEmpty ? "Enter a valid Task ID" : null,
+                ),
+                TextField(
+                  controller: dateController,
+                  readOnly: true, // Prevent user from typing manually
+                  onTap: () => selectDate(context), // Open date picker on tap
+                  decoration: InputDecoration(
+                    labelText: "Select Date",
+                    hintText: "YYYY-MM-DD",
+                  ),
+                ),
+                TextFormField(
+                  controller: startTimeController,
+                  decoration: InputDecoration(labelText: "Start Time (HH:MM AM/PM)"),
+                  validator: (value) => value!.isEmpty ? "Enter start time" : null,
+                ),
+                TextFormField(
+                  controller: endTimeController,
+                  decoration: InputDecoration(labelText: "End Time (HH:MM AM/PM)"),
+                  validator: (value) => value!.isEmpty ? "Enter end time" : null,
+                ),
+                TextFormField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(labelText: "Description"),
+                  validator: (value) => value!.isEmpty ? "Enter a description" : null,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                addOrUpdateTimeSheet();
+              },
+              child: Text("Save"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text('Time Sheets',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade900, Colors.blue.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text('Time Sheet',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: () {
-              setState(() {
-                entries.add(TimeSheetEntry());
-              });
-            },
+            icon: Icon(Icons.filter_alt),
+            onPressed: pickDateRange,
           ),
         ],
       ),
-      body: Container(
-        child: ListView.builder(
-          itemCount: entries.length,
-          padding: const EdgeInsets.all(12),
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: TimeSheetWidget(
-                entry: entries[index],
-                onRemove: () {
-                  setState(() {
-                    entries.removeAt(index);
-                  });
-                },
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : timeSheetData.isEmpty
+          ? const Center(child: Text("No data available"))
+          : ListView.builder(
+        itemCount: timeSheetData.length,
+        itemBuilder: (context, index) {
+          var timeSheet = timeSheetData[index];
+          return Card(color: Colors.white,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.access_time, color: Colors.blueAccent),
+                      SizedBox(width: 8),
+                      Text(
+                        timeSheet['period']?.toString() ?? '',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                      Spacer(),
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          // Call the edit function
+                          showEditTimeSheetDialog(timeSheet);
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.assignment_turned_in, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text("Status: ", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+                      Text(timeSheet['statusName']?.toString() ?? '', style: TextStyle(color: Colors.black87)),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.redAccent),
+                      SizedBox(width: 8),
+                      Text("Work Location: ", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+                      Expanded(
+                        child: Text(
+                          timeSheet['workLocation']?.toString() ?? '',
+                          style: TextStyle(color: Colors.black87),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Text("Date: ", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+                      Text(timeSheet['date']?.toString() ?? '', style: TextStyle(color: Colors.black87)),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.timeline, color: Colors.purpleAccent),
+                      SizedBox(width: 8),
+                      Text("Period: ", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+                      Text(timeSheet['period']?.toString() ?? '', style: TextStyle(color: Colors.black87)),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.description, color: Colors.blueGrey),
+                      SizedBox(width: 8),
+                      Text("Description: ", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+                      Expanded(
+                        child: Text(
+                          timeSheet['description']?.toString() ?? '',
+                          style: TextStyle(color: Colors.black87),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(backgroundColor: Colors.blue,
+        onPressed: showAddTimeSheetDialog,
+        child: Icon(Icons.add,color: Colors.white,),
       ),
     );
   }
-}
 
-class TimeSheetEntry {
-  DateTime date = DateTime.now();
-  TimeOfDay from = TimeOfDay.now();
-  TimeOfDay to = TimeOfDay.now();
-  String task = '';
-}
+// Method to show the edit dialog with existing data
+  void showEditTimeSheetDialog(Map<String, dynamic> timeSheet) {
+    // Populate the controllers with existing data
+    taskIdController.text = timeSheet['taskId'].toString();
+    dateController.text = timeSheet['date'].toString();
+    startTimeController.text = timeSheet['startTime'].toString();
+    endTimeController.text = timeSheet['endTime'].toString();
+    descriptionController.text = timeSheet['description'].toString();
 
-class TimeSheetWidget extends StatefulWidget {
-  final TimeSheetEntry entry;
-  final VoidCallback onRemove;
+    // Set detailId for update purposes
+    detailId = timeSheet['detailId'];
 
-  const TimeSheetWidget({
-    Key? key,
-    required this.entry,
-    required this.onRemove,
-  }) : super(key: key);
-
-  @override
-  _TimeSheetWidgetState createState() => _TimeSheetWidgetState();
-}
-
-class _TimeSheetWidgetState extends State<TimeSheetWidget> {
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white.withOpacity(0.9),
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.blueGrey[900]!, width: 1.5),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GestureDetector(
-              onTap: () async {
-                final DateTime? selectedDate =
-                await _selectDate(context, widget.entry.date);
-                if (selectedDate != null) {
-                  setState(() {
-                    widget.entry.date = selectedDate;
-                  });
-                }
-              },
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: 'Select Date',
-                  labelStyle: TextStyle(
-                      color: Colors.blueGrey[700], fontWeight: FontWeight.bold),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.blueGrey[400]!),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${widget.entry.date.day}/${widget.entry.date.month}/${widget.entry.date.year}',
-                      style: TextStyle(
-                          color: Colors.blueGrey[900],
-                          fontWeight: FontWeight.w600),
-                    ),
-                    const Icon(Icons.calendar_today, color: Colors.blueGrey),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Task: ${widget.entry.task.isEmpty ? 'No Task Selected' : widget.entry.task}',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.blueGrey[900],
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit Time Sheet"),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () async {
-                      final TimeOfDay? selectedTime =
-                      await _selectTime(context, widget.entry.from);
-                      if (selectedTime != null &&
-                          selectedTime != widget.entry.from) {
-                        setState(() {
-                          widget.entry.from = selectedTime;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'From Time',
-                        labelStyle: TextStyle(
-                            color: Colors.blueGrey[700],
-                            fontWeight: FontWeight.bold),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.blueGrey[400]!),
-                        ),
-                        contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            widget.entry.from.format(context),
-                            style: TextStyle(
-                                color: Colors.blueGrey[900],
-                                fontWeight: FontWeight.w600),
-                          ),
-                          const Icon(Icons.access_time, color: Colors.blueGrey),
-                        ],
-                      ),
-                    ),
+                TextFormField(
+                  controller: taskIdController,
+                  decoration: InputDecoration(labelText: "Task ID"),
+                  keyboardType: TextInputType.number,
+                  validator: (value) => value!.isEmpty ? "Enter a valid Task ID" : null,
+                ),
+                TextField(
+                  controller: dateController,
+                  readOnly: true, // Prevent user from typing manually
+                  onTap: () => selectDate(context), // Open date picker on tap
+                  decoration: InputDecoration(
+                    labelText: "Select Date",
+                    hintText: "YYYY-MM-DD",
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () async {
-                      final TimeOfDay? selectedTime =
-                      await _selectTime(context, widget.entry.to);
-                      if (selectedTime != null &&
-                          selectedTime != widget.entry.to) {
-                        setState(() {
-                          widget.entry.to = selectedTime;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'To Time',
-                        labelStyle: TextStyle(
-                            color: Colors.blueGrey[700],
-                            fontWeight: FontWeight.bold),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.blueGrey[400]!),
-                        ),
-                        contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            widget.entry.to.format(context),
-                            style: TextStyle(
-                                color: Colors.blueGrey[900],
-                                fontWeight: FontWeight.w600),
-                          ),
-                          const Icon(Icons.access_time, color: Colors.blueGrey),
-                        ],
-                      ),
-                    ),
-                  ),
+                TextFormField(
+                  controller: startTimeController,
+                  decoration: InputDecoration(labelText: "Start Time (HH:MM AM/PM)"),
+                  validator: (value) => value!.isEmpty ? "Enter start time" : null,
+                ),
+                TextFormField(
+                  controller: endTimeController,
+                  decoration: InputDecoration(labelText: "End Time (HH:MM AM/PM)"),
+                  validator: (value) => value!.isEmpty ? "Enter end time" : null,
+                ),
+                TextFormField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(labelText: "Description"),
+                  validator: (value) => value!.isEmpty ? "Enter a description" : null,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: widget.entry.task.isEmpty ? null : widget.entry.task,
-              decoration: InputDecoration(
-                labelText: 'Select Task',
-                labelStyle: TextStyle(
-                    color: Colors.blueGrey[700], fontWeight: FontWeight.bold),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.blueGrey[400]!),
-                ),
-              ),
-              dropdownColor: Colors.white.withOpacity(0.9),
-              items: <String>['Task 1', 'Task 2', 'Task 3'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value,
-                      style: TextStyle(color: Colors.blueGrey[900])),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  widget.entry.task = newValue ?? '';
-                });
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                addOrUpdateTimeSheet(flag: "UPDATE");
               },
+              child: Text("Save"),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Duration: ${_calculateDuration(widget.entry.from, widget.entry.to)}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.blueGrey[900], fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: widget.onRemove,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 24),
-                  ),
-                  child: const Text('Remove',style: TextStyle(color: Colors.white),),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle save logic here
-                    // e.g., show a confirmation message, save to a database, etc.
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('TimeSheet Saved!')),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 24),
-                  ),
-                  child: const Text('Save',style: TextStyle(color: Colors.white),),
-                ),
-              ],
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Cancel"),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Future<DateTime?> _selectDate(BuildContext context, DateTime initialDate) async {
-    return showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blueGrey[900]!, // header background color
-              onPrimary: Colors.white, // header text color
-              onSurface: Colors.blueGrey[900]!, // body text color
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.blueGrey[900], // button text color
-              ),
-            ),
-          ),
-          child: child!,
         );
       },
     );
   }
 
-  Future<TimeOfDay?> _selectTime(BuildContext context, TimeOfDay initialTime) async {
-    return showTimePicker(
-      context: context,
-      initialTime: initialTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blueGrey[900]!, // dial background color
-              onPrimary: Colors.white, // dial text color
-              onSurface: Colors.blueGrey[900]!, // other text color
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.blueGrey[900], // button text color
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-  }
-
-  String _calculateDuration(TimeOfDay from, TimeOfDay to) {
-    final now = DateTime.now();
-    final fromTime =
-    DateTime(now.year, now.month, now.day, from.hour, from.minute);
-    final toTime = DateTime(now.year, now.month, now.day, to.hour, to.minute);
-    final difference = toTime.difference(fromTime);
-    final hours = difference.inHours;
-    final minutes = difference.inMinutes.remainder(60);
-    return '${hours}h ${minutes}m';
-  }
 }
