@@ -52,6 +52,7 @@ class _RequestsState extends State<Requests> {
       "UserId": "759",
       "Flag": flag
     };
+    print(requestBody);
 
     try {
       final response = await http.post(
@@ -136,7 +137,8 @@ class _RequestsState extends State<Requests> {
                     ? Center(
                         child: Text('No data available',
                             style: TextStyle(fontSize: 16)))
-                    : Expanded(
+                    :
+            Expanded(
                         child: ListView.builder(
                             itemCount: _adjustmentData.length,
                             itemBuilder: (context, index) {
@@ -159,7 +161,7 @@ class _RequestsState extends State<Requests> {
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
+                                          color: Colors.black,
                                         ),
                                       ),
                                       SizedBox(height: 8),
@@ -215,8 +217,8 @@ class _RequestsState extends State<Requests> {
               '$label:',
               style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black54),
+
+                  color: Colors.black),
               overflow: TextOverflow
                   .ellipsis, // Prevents overflow by truncating the text
             ),
@@ -226,8 +228,8 @@ class _RequestsState extends State<Requests> {
               value ?? 'N/A',
               style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
               textAlign: TextAlign.right,
               overflow: TextOverflow
                   .ellipsis, // Prevents overflow by truncating the text

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -11,33 +12,144 @@ class Experience extends StatefulWidget {
 
 class _ExperienceState extends State<Experience> {
   List<dynamic> experienceList = [];
+  final _formKey = GlobalKey<FormState>(); // Global key for form
+
+  final industryController = TextEditingController();
+  final locationController = TextEditingController();
+  final dateFromController = TextEditingController();
+  final dateToController = TextEditingController();
+
+  List<dynamic> organizationList = [];
+  List<dynamic> designationList = [];
+  List<dynamic> mediumList = [];
+  List<dynamic> certificateList = [];
+
+  int? selectedOrganizationId;
+  int? selectedDesignationId;
+  int? selectedMediumId;
+  int? selectedCertificateId;
+
+  bool isEditing = false;
+  int? empExpId; // To store the ID of the experience being edited
 
   @override
   void initState() {
     super.initState();
     fetchExperienceData();
+    fetchOrganizationData();
+    fetchDesignationData();
+    fetchMediumData();
+    fetchCertificateData();
   }
 
-  // Fetch Employee Experience Data
+  // Fetch organization data
+  Future<void> fetchOrganizationData() async {
+    final url = Uri.parse(
+        'https://beessoftware.cloud/CoreAPIPreprod/CloudilyaMobileAPP/CommonLookUpsDropDown');
+    final body = {
+      "GrpCode": "Beesdev",
+      "ColCode": "0001",
+      "Flag": 25,
+    };
+    final response = await http.post(url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        organizationList = json.decode(response.body)['organizationList'];
+      });
+    } else {
+      print('Failed to load organizations');
+    }
+  }
+
+  // Fetch designation data
+  Future<void> fetchDesignationData() async {
+    final url = Uri.parse(
+        'https://beessoftware.cloud/CoreAPIPreprod/CloudilyaMobileAPP/DesignationDropDownForExperience');
+    final body = {
+      "GrpCode": "Beesdev",
+      "ColCode": "0001",
+    };
+    final response = await http.post(url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        designationList =
+        json.decode(response.body)['designationDropDownPayrollList'];
+      });
+    } else {
+      print('Failed to load designations');
+    }
+  }
+
+  // Fetch medium data
+  Future<void> fetchMediumData() async {
+    final url = Uri.parse(
+        'https://beessoftware.cloud/CoreAPIPreprod/CloudilyaMobileAPP/CommonLookUpsDropDown');
+    final body = {
+      "GrpCode": "Beesdev",
+      "ColCode": "0001",
+      "Flag": 13,
+    };
+    final response = await http.post(url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        mediumList = json.decode(response.body)['mediumList'];
+      });
+    } else {
+      print('Failed to load mediums');
+    }
+  }
+
+  // Fetch certificate data
+  Future<void> fetchCertificateData() async {
+    final url = Uri.parse(
+        'https://beessoftware.cloud/CoreAPIPreprod/CloudilyaMobileAPP/CommonLookUpsDropDown');
+    final body = {
+      "GrpCode": "Beesdev",
+      "ColCode": "0001",
+      "Flag": 15,
+    };
+    final response = await http.post(url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        certificateList = json.decode(response.body)['certificatesList'];
+      });
+    } else {
+      print('Failed to load certificates');
+    }
+  }
+
+  // Fetch experience data
   Future<void> fetchExperienceData() async {
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeExperience');
-    final body =
-    {
+    final body = {
       "GrpCode": "Beesdev",
       "ColCode": "0001",
       "CollegeId": "1",
       "EmpExpId": 0,
-      "EmployeeId": "12",
+      "EmployeeId": "17051",
       "StartDate": "",
       "EndDate": "",
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "UserId": 1,
       "Flag": "VIEW",
-      "EmployeeNumber":"EMP20240011",
+      "EmployeeNumber": "EMP20240011",
       "DisplayandSaveEmployeeExperienceVariable": [
-        { "EmpExpId": 0,
+        {
+          "EmpExpId": 0,
           "Organization": 0,
           "Industry": "",
           "Location": "",
@@ -47,27 +159,25 @@ class _ExperienceState extends State<Experience> {
           "Medium": 0,
           "CertificateSubmitted": 0,
           "Certificate": 0,
-          "ChooseFile": ""}
+          "ChooseFile": ""
+        }
       ]
     };
-
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: json.encode(body),
     );
-
     if (response.statusCode == 200) {
       setState(() {
         experienceList =
         json.decode(response.body)['displayandSaveEmployeeExperienceList'];
       });
     } else {
-      print('Failed to fetch data');
+      print('Failed to fetch experience data');
     }
   }
 
-  // Add or Edit experience
   Future<void> saveExperience(String flag, dynamic experienceData) async {
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeExperience');
@@ -76,241 +186,133 @@ class _ExperienceState extends State<Experience> {
       "ColCode": "0001",
       "CollegeId": "1",
       "EmpExpId": experienceData['empExpId'] ?? 0,
-      "EmployeeId": "13",
+      "EmployeeId": "17051",
       "StartDate": experienceData['dateFrom'],
       "EndDate": experienceData['dateTo'],
-      "LoginIpAddress": "",
-      "LoginSystemName": "",
       "UserId": 1,
       "Flag": flag,
-      "EmployeeNumber":"EMP20240011",
-      "DisplayandSaveEmployeeExperienceVariable": [experienceData]
+      "EmployeeNumber": "EMP20240011",
+      "LoginIpAddress": "",
+      "LoginSystemName": "",
+      "DisplayandSaveEmployeeExperienceVariable": [
+        {
+          'Organization': experienceData['organization'],
+          'Industry': experienceData['industry'],
+          'Location': experienceData['location'],
+          'DateFrom': experienceData['dateFrom'],
+          'DateTo': experienceData['dateTo'],
+          'Designation': experienceData['designation'],
+          'Medium': experienceData['medium'],
+          'CertificateSubmitted': 0,
+          'Certificate': experienceData['certificate'],
+          'ChooseFile': ''
+        }
+      ]
     };
-
-    // Print the request body
-    print('Request Body:123 ${json.encode(body)}');
-
+    print('Request Body: $body');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: json.encode(body),
     );
-
     if (response.statusCode == 200) {
       final responseBody = json.decode(response.body);
-
-      // Print the response body
-      print('Response Body: ${response.body}');
-
-      // Check the message in the response
       if (responseBody['message'] == 'Record is Successfully Saved') {
+        setState(() {
+          isEditing = false;
+          empExpId = null;
+          selectedOrganizationId = null;
+          selectedDesignationId = null;
+          selectedMediumId = null;
+          selectedCertificateId = null;
+        });
         fetchExperienceData();
-        // Show a success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Experience successfully saved!')),
-        );
 
-        fetchExperienceData(); // Refresh list after save
+        // Show Toast with the message
+        Fluttertoast.showToast(
+          msg: responseBody['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       } else {
-        // Handle unexpected response message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(
-              'Failed to save experience: ${responseBody['message']}')),
+        // Show Toast with the message
+        Fluttertoast.showToast(
+          msg: responseBody['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
     } else {
-      // Handle non-200 response codes
-      print('Failed to save data. Status code: ${response.statusCode}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save data. Please try again.')),
+      // Show Toast with the message
+      Fluttertoast.showToast(
+        msg: 'Failed to save data. Please try again.',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
     }
   }
 
-  // Delete experience
-  // Future<void> deleteExperience(int empExpId) async {
-  //   final url = Uri.parse(
-  //       'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeExperience');
-  //   final body = {
-  //     "GrpCode": "Bees",
-  //     "ColCode": "0001",
-  //     "CollegeId": "1",
-  //     "EmpExpId": empExpId,
-  //     "EmployeeId": "13",
-  //     "StartDate": "",
-  //     "EndDate": "",
-  //     "LoginIpAddress": "",
-  //     "LoginSystemName": "",
-  //     "UserId": 1,
-  //     "Flag": "DELETE",
-  //     "DisplayandSaveEmployeeExperienceVariable": [
-  //       { "EmpExpId": 0,
-  //         "Organization": 0,
-  //         "Industry": "",
-  //         "Location": "",
-  //         "DateFrom": "",
-  //         "DateTo": "",
-  //         "Designation": 0,
-  //         "Medium": 0,
-  //         "CertificateSubmitted": 0,
-  //         "Certificate": 0,
-  //         "ChooseFile": ""}
-  //     ]
-  //   };
-  //
-  //   // Print the request body
-  //   print('Request Body: ${json.encode(body)}');
-  //
-  //   final response = await http.post(
-  //     url,
-  //     headers: {'Content-Type': 'application/json'},
-  //     body: json.encode(body),
-  //   );
-  //
-  //   if (response.statusCode == 200) {
-  //     print(response.body);
-  //     fetchExperienceData(); // Refresh list after delete
-  //   } else {
-  //     print('Failed to delete data');
-  //   }
-  // }
+  void _handleSaveExperience() {
+    if (_formKey.currentState!.validate()) {
+      final experienceData = {
+        'empExpId': empExpId ?? 0,
+        'organization': selectedOrganizationId ?? 0,
+        'industry': industryController.text,
+        'location': locationController.text,
+        'dateFrom': dateFromController.text,
+        'dateTo': dateToController.text,
+        'designation': selectedDesignationId ?? 0,
+        'medium': selectedMediumId ?? 0,
+        'certificate': selectedCertificateId ?? 0,
+      };
+      String flag = isEditing ? 'UPDATE' : 'CREATE';
+      saveExperience(flag, experienceData);
 
-  // Open dialog for adding or editing experience
-  Future<void> openAddEditDialog([dynamic experience]) async {
-    final organizationController = TextEditingController(
-        text: experience?['organizationName'] ?? '');
-    final industryController = TextEditingController(
-        text: experience?['industry'] ?? '');
-    final locationController = TextEditingController(
-        text: experience?['location'] ?? '');
-    final dateFromController = TextEditingController(
-        text: experience?['dateFrom'] ?? '');
-    final dateToController = TextEditingController(
-        text: experience?['dateTo'] ?? '');
-    final designationController = TextEditingController(
-        text: experience?['designationName'] ?? '');
-    final mediumController = TextEditingController(
-        text: experience?['mediumName'] ?? '');
-    final certificateController = TextEditingController(
-        text: experience?['certificateName'] ?? '');
+      // Clear the form and reset state
+      industryController.clear();
+      locationController.clear();
+      dateFromController.clear();
+      dateToController.clear();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
-          elevation: 10.0,
-          backgroundColor: Colors.white,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    experience == null ? 'Add Experience' : 'Edit Experience',
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 16.0),
-                  _buildTextField(organizationController, 'Organization'),
-                  _buildTextField(industryController, 'Industry'),
-                  _buildTextField(locationController, 'Location'),
-                  _buildTextField(dateFromController, 'From Date'),
-                  _buildTextField(dateToController, 'To Date'),
-                  _buildTextField(designationController, 'Designation'),
-                  _buildTextField(mediumController, 'Medium'),
-                  _buildTextField(certificateController, 'Certificate'),
-                  SizedBox(height: 20.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(color: Colors.blueAccent),
-                        ),
-                      ),
-                      SizedBox(width: 10.0),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.blueAccent,
-                          elevation: 5.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          final newExperience = {
-                            'organizationName': organizationController.text,
-                            'industry': industryController.text,
-                            'location': locationController.text,
-                            'dateFrom': dateFromController.text,
-                            'dateTo': dateToController.text,
-                            'designationName': designationController.text,
-                            'mediumName': mediumController.text,
-                            'certificateName': certificateController.text,
-                            'empExpId': experience?['empExpId'] ?? 0,
-                          };
-                          saveExperience(
-                            experience == null ? 'CREATE' : 'OVERWRITE',
-                            newExperience,
-                          ); // Save experience
-                        },
-                        child: Text('Save'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+      setState(() {
+        selectedOrganizationId = null;
+        selectedDesignationId = null;
+        selectedMediumId = null;
+        selectedCertificateId = null;
+        empExpId = null;
+        isEditing = false;
+      });
+    }
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextField(
-        controller: controller,
-        style: TextStyle(color: Colors.black87),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.black54),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: BorderSide(color: Colors.blueAccent, width: 2.0),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: BorderSide(color: Colors.black54, width: 1.0),
-          ),
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    industryController.dispose();
+    locationController.dispose();
+    dateFromController.dispose();
+    dateToController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Employee Experience', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.2,color: Colors.white)),
+        title: Text('Employee Experience',
+            style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
@@ -323,112 +325,253 @@ class _ExperienceState extends State<Experience> {
             ),
           ),
         ),
-        // actions: [
-        //   IconButton(
-        //     icon: Icon(Icons.add, color: Colors.blueAccent),
-        //     onPressed: () {
-        //       openAddEditDialog(); // Open dialog for creating new experience
-        //     },
-        //   ),
-        // ],
       ),
-      body: Container(
-        color: Colors.white,
-        child: experienceList.isEmpty
-            ? Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-            strokeWidth: 3,
-          ),
-        )
-            : ListView.builder(
-          itemCount: experienceList.length,
-          itemBuilder: (context, index) {
-            final experience = experienceList[index];
-            return AnimatedContainer(
-              duration: Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.white, Colors.grey[200]!],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    spreadRadius: 4,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Padding(
+      body: SingleChildScrollView(
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              // Form for adding experience
+              Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Organization: ${experience['organizationName']}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.black87,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      _buildDropdownField(
+                        'Organization',
+                        organizationList,
+                        selectedOrganizationId,
+                            (newValue) {
+                          setState(() {
+                            selectedOrganizationId = newValue;
+                          });
+                        },
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Text('Industry: ${experience['industry']}',
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    Text('Location: ${experience['location']}',
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    Text('From: ${experience['dateFrom']}',
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    Text('To: ${experience['dateTo']}',
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    Text('Designation: ${experience['designationName']}',
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    Text('Medium: ${experience['mediumName']}',
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    Text('Certificate: ${experience['certificateName']}',
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blueAccent),
-                          onPressed: () {
-                            openAddEditDialog(experience); // Open dialog for editing experience
-                          },
+                      _buildDropdownField(
+                        'Designation',
+                        designationList,
+                        selectedDesignationId,
+                            (newValue) {
+                          setState(() {
+                            selectedDesignationId = newValue;
+                          });
+                        },
+                      ),
+                      _buildDropdownField(
+                        'Medium',
+                        mediumList,
+                        selectedMediumId,
+                            (newValue) {
+                          setState(() {
+                            selectedMediumId = newValue;
+                          });
+                        },
+                      ),
+                      _buildDropdownField(
+                        'Certificate',
+                        certificateList,
+                        selectedCertificateId,
+                            (newValue) {
+                          setState(() {
+                            selectedCertificateId = newValue;
+                          });
+                        },
+                      ),
+                      _buildTextField(industryController, 'Industry'),
+                      _buildTextField(locationController, 'Location'),
+                      _buildTextField(dateFromController, 'From Date'),
+                      _buildTextField(dateToController, 'To Date'),
+                      SizedBox(height: 16.0),
+                      ElevatedButton(
+                        onPressed: _handleSaveExperience,
+                        child: Text(
+                          isEditing ? 'Update Experience' : 'Save Experience',
+                          style: TextStyle(color: Colors.white),
                         ),
-                        // Uncomment if delete functionality is needed
-                        // IconButton(
-                        //   icon: Icon(Icons.delete, color: Colors.redAccent),
-                        //   onPressed: () {
-                        //     deleteExperience(experience['empExpId']); // Delete experience
-                        //   },
-                        // ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              experienceList.isEmpty
+                  ? Center(
+                child: CircularProgressIndicator(
+                  valueColor:
+                  AlwaysStoppedAnimation<Color>(Colors.blue),
+                  strokeWidth: 3,
+                ),
+              )
+                  : ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: experienceList.length,
+                itemBuilder: (context, index) {
+                  final experience = experienceList[index];
+                  return AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    margin: EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, Colors.grey[200]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          spreadRadius: 4,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
                       ],
                     ),
-                  ],
-                ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Organization Name
+                          Text(
+                            'Organization: ${experience['organizationName'] ?? ''}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Details
+                          _buildDetailRow(
+                              'Industry:', experience['industry'] ?? ''),
+                          _buildDetailRow(
+                              'Location:', experience['location'] ?? ''),
+                          _buildDetailRow(
+                              'From:', experience['dateFrom'] ?? ''),
+                          _buildDetailRow(
+                              'To:', experience['dateTo'] ?? ''),
+                          _buildDetailRow(
+                              'Designation:',
+                              experience['designationName'] ?? ''),
+                          _buildDetailRow(
+                              'Medium:', experience['mediumName'] ?? ''),
+                          _buildDetailRow('Certificate:',
+                              experience['certificateName'] ?? ''),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit,
+                                    color: Colors.blueAccent),
+                                onPressed: () {
+                                  setState(() {
+                                    selectedOrganizationId =
+                                    experience['organization'];
+                                    selectedDesignationId =
+                                    experience['designation'];
+                                    selectedMediumId =
+                                    experience['medium'];
+                                    selectedCertificateId =
+                                    experience['certificate'];
+                                    industryController.text =
+                                        experience['industry'] ?? '';
+                                    locationController.text =
+                                        experience['location'] ?? '';
+                                    dateFromController.text =
+                                        experience['dateFrom'] ?? '';
+                                    dateToController.text =
+                                        experience['dateTo'] ?? '';
+                                    empExpId = experience['empExpId'];
+                                    isEditing = true;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
-      floatingActionButton: Container(width: 170,
-        child: FloatingActionButton(
-          onPressed: () {
-            openAddEditDialog(); // Open dialog for creating new experience
-          },
-          backgroundColor: Colors.blue,
-          child: Text("Add Experience",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
-          tooltip: 'Add Experience',
+    );
+  }
+
+  Widget _buildDropdownField(
+      String label,
+      List<dynamic> items,
+      int? selectedValue,
+      Function(int?) onChanged,
+      ) {
+    return Padding(
+      padding: const EdgeInsets.all(3.0),
+      child: DropdownButtonFormField<int>(
+        value: selectedValue,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
         ),
+        items: items.map((item) {
+          int itemId = item['lookUpId'] ??
+              item['designationId'] ??
+              item['certificateId'];
+          String itemName = item['meaning'] ??
+              item['designationName'] ??
+              item['certificateName'] ??
+              '';
+          return DropdownMenuItem<int>(
+            value: itemId,
+            child: Text(itemName),
+          );
+        }).toList(),
+        onChanged: onChanged,
+        validator: (value) {
+          if (value == null || value == 0) {
+            return 'Please select $label';
+          }
+          return null;
+        },
       ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+          filled: true,
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter $label';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String? value) {
+    return Text(
+      '$label ${value ?? ''}',
+      style: TextStyle(fontSize: 16, color: Colors.black54),
     );
   }
 }

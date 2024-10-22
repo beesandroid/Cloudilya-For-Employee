@@ -41,13 +41,12 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
         "SectionId": 0,
         "CourseId": 1556,
         "MaterialType": 0,
-        "Unit": 5652,
+        "Unit": "5652",
         "LoginIpAddress": "",
         "LoginSystemName": "",
         "Flag": "VIEW"
       }),
     );
-
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
       print(responseData);
@@ -56,7 +55,6 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
         _isLoading = false;
       });
     } else {
-      // Handle error response
       setState(() {
         _isLoading = false;
       });
@@ -65,7 +63,6 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
 
   Future<void> _deleteEmployeeMaterial(
       int id, int topicId, String updatedDate, String ChooseFile) async {
-    // Prepare the request body
     final requestBody = json.encode({
       "GrpCode": "Beesdev",
       "ColCode": "0001",
@@ -78,15 +75,10 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
       "Batch": "",
       "LoginIpAddress": "",
       "LoginSystemName": "",
-      "Id": id, // Use the ID of the item to delete
-      "Flag": "DELETE", // Set flag to "DELETE"
-      // Add other relevant values in the request body if necessary
+      "Id": id,
+      "Flag": "DELETE",
     });
-
-    // Print the request body to the console
     print('Request Body: $requestBody');
-
-    // Make the API call
     final response = await http.post(
       Uri.parse(
           'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeMaterialUploading'),
@@ -96,12 +88,10 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
 
     if (response.statusCode == 200) {
       print(response.body);
-      // Remove the deleted item from the list
       setState(() {
         _employeeMaterialList.removeWhere((item) => item['id'] == id);
       });
     } else {
-      // Handle error if delete request fails
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete material')),
       );
@@ -112,8 +102,14 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Employee Material',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Employee Material',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22, // Enhanced font size for richness
+          ),
+        ),
         iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -130,13 +126,16 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) =>
-                    ProgramDropdownScreen()), // Navigate to ProgramDropdownScreen
+              builder: (context) => ProgramDropdownScreen(),
+            ),
           );
         },
         child: Icon(Icons.add, color: Colors.white),
-        backgroundColor: Colors.blue,
-        elevation: 8.0,
+        backgroundColor: Colors.blue.shade900,
+        elevation: 10.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20), // Rounder, more modern FAB
+        ),
       ),
       body: Column(
         children: [
@@ -147,92 +146,171 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
                     itemCount: _employeeMaterialList.length,
                     itemBuilder: (context, index) {
                       final item = _employeeMaterialList[index];
-                      return Card(
-                        color: Colors.white,
-                        margin: EdgeInsets.symmetric(
-                            vertical: 8.0, horizontal: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        elevation: 5.0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    item['topicName'] ?? 'No Topic Name',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () async {
-                                      // Ask for confirmation before deleting
-                                      final confirm = await showDialog(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: Text('Delete Material'),
-                                          content: Text(
-                                              'Are you sure you want to delete this material?'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(false),
-                                              child: Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(true),
-                                              child: Text('Delete'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      if (confirm) {
-                                        _deleteEmployeeMaterial(
-                                            item['id'],
-                                            item['topicId'],
-                                            item['updatedDate'],
-                                            item[
-                                                'chooseFileName']); // Call delete function
-                                      }
-                                    },
-                                  ),
-                                ],
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 16.0),
+                        child: Material(
+                          elevation: 8.0,
+                          shadowColor: Colors.grey.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(16),
+                          child: ExpansionTile(
+                            backgroundColor: Colors.white,
+                            collapsedBackgroundColor: Colors.white,
+                            tilePadding: EdgeInsets.symmetric(
+                                vertical: 10.0, horizontal: 16.0),
+                            leading: Icon(Icons.description,
+                                color: Colors.blue.shade900),
+                            title: Text(
+                              item['topicName'] ?? 'No Topic Name',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade900,
                               ),
-                              SizedBox(height: 8.0),
-                              Text('Program: ${item['programName'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Branch: ${item['branchName'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Semester: ${item['semester'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Course: ${item['courseName'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text(
-                                  'Material Type: ${item['materialTypeName'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Unit: ${item['unitName'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text(
-                                  'Updated Date: ${item['updatedDate'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text(
-                                  'File Names: ${item['chooseFileName'] ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 16)),
+                            ),
+                            childrenPadding: EdgeInsets.all(16.0),
+                            expandedAlignment: Alignment.centerLeft,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(16.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildInfoText(
+                                        'Program', item['programName']),
+                                    _buildInfoText(
+                                        'Branch', item['branchName']),
+                                    _buildInfoText(
+                                        'Semester', item['semester']),
+                                    _buildInfoText(
+                                        'Course', item['courseName']),
+                                    _buildInfoText('Material Type',
+                                        item['materialTypeName']),
+                                    _buildInfoText('Unit', item['unitName']),
+                                    _buildInfoText(
+                                        'Updated Date', item['updatedDate']),
+                                    _buildInfoText(
+                                        'File Names', item['chooseFileName']),
+                                    SizedBox(height: 16.0),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red.shade600,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 16.0, vertical: 10.0),
+                                        ),
+                                        onPressed: () async {
+                                          final confirm = await showDialog(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              backgroundColor: Colors.white,
+                                              title: Text(
+                                                'Delete Material',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              content: Text(
+                                                'Are you sure you want to delete this material?',
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(ctx)
+                                                          .pop(false),
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.grey.shade700,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(ctx)
+                                                          .pop(true),
+                                                  child: Text(
+                                                    'Delete',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.red.shade700,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm) {
+                                            _deleteEmployeeMaterial(
+                                              item['id'],
+                                              item['topicId'],
+                                              item['updatedDate'],
+                                              item['chooseFileName'],
+                                            );
+                                          }
+                                        },
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Colors.white,
+                                        ),
+                                        label: Text(
+                                          'Delete',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       );
                     },
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// Utility method to build rich info text fields
+  Widget _buildInfoText(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value ?? 'N/A',
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+            ),
           ),
         ],
       ),

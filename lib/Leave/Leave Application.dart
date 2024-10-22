@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
@@ -30,6 +31,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
   List<Map<String, dynamic>> datesList = [];
   List<Map<String, dynamic>> periodsList = [];
   List<Map<String, dynamic>> facultyList = [];
+  String? _attachmentPath;
 
   @override
   void initState() {
@@ -201,7 +203,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return AlertDialog(backgroundColor: Colors.white,
           title: Text('Error'),
           content: Text(message),
           actions: [
@@ -269,6 +271,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
           'LeaveDuration': _calculateSelectedDays(),
           'Reason': _reasonController.text,
           'leavename': _selectedLeaveType.toString(),
+          '_attachmentPath':_attachmentPath,
 
           'AccrualPeriodName': _selectedLeaveType!['accrualPeriodName'],
           'Accrued': _selectedLeaveType!['accrued'],
@@ -276,6 +279,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
         };
         print('Selected Leave Type: ${_selectedLeaveType!['absenceTypeName']}');
         setState(() {
+          _attachmentPath=null;
           _leaveApplications.add(leaveApplication);
           _selectedLeaveType = null;
           _reasonController.clear();
@@ -295,7 +299,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
       "ApplicationId": 0,
       "Flag": "REVIEW",
       "UserId": 759,
-      "AttachFile": " ",
+      "AttachFile": "",
       "Reason": _reasonController.text,
       "LeaveApplicationSaveTablevariable":
       _leaveApplications.map((application) {
@@ -305,7 +309,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
           "ToDate": application['ToDate'],
           "LeaveDuration": application['LeaveDuration'],
           "Reason": application['Reason'],
-          "AttachFile": ""
+          "AttachFile": _attachmentPath
         };
       }).toList(),
     };
@@ -796,6 +800,33 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
               ],
             ),
           ),
+          SizedBox(height: 16.0),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            onPressed: () async {
+              // File picker logic
+              String? path = (await FilePicker.platform.pickFiles())
+                  ?.files
+                  .first
+                  .path;
+              if (path != null) {
+                setState(() {
+                  _attachmentPath = path; // Store the selected path
+                });
+              }
+            },
+            child: Text('Upload Attachment',
+                style: TextStyle(color: Colors.white)),
+          ),
+          SizedBox(height: 16.0),
+    Text(
+    _attachmentPath != null
+    ? 'Selected Attachment: $_attachmentPath'
+        : 'No Attachment Selected',
+    style: TextStyle(
+    fontSize: 14,
+    ),
+    ),
           SizedBox(height: 16.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

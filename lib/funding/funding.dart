@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -116,16 +118,15 @@ class _FundingState extends State<Funding> {
       _fetchProjects();
       final responseBody = jsonDecode(response.body);
 
-      // Check if the message key is present
-      if (responseBody.containsKey('message')) {
-        // Show Snackbar with the message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseBody['message']),
-            duration: Duration(seconds: 4),
-          ),
-        );
-      }
+      Fluttertoast.showToast(
+        msg: responseBody['message'],
+        toastLength: Toast.LENGTH_LONG, // or Toast.LENGTH_SHORT
+        gravity: ToastGravity.BOTTOM, // can be TOP, CENTER, or BOTTOM
+        timeInSecForIosWeb: 1, // duration for iOS Web
+        backgroundColor: Colors.black, // background color of the toast
+        textColor: Colors.white, // text color of the toast
+        fontSize: 16.0, // font size
+      );
       print(response.body);
     } else {
 
@@ -273,16 +274,15 @@ class _FundingState extends State<Funding> {
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(response.body);
 
-      // Check if the message key is present
-      if (responseBody.containsKey('message')) {
-        // Show Snackbar with the message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseBody['message']),
-            duration: Duration(seconds: 4),
-          ),
-        );
-      }
+      Fluttertoast.showToast(
+        msg: responseBody['message'],
+        toastLength: Toast.LENGTH_LONG, // or Toast.LENGTH_SHORT
+        gravity: ToastGravity.BOTTOM, // can be TOP, CENTER, or BOTTOM
+        timeInSecForIosWeb: 1, // duration for iOS Web
+        backgroundColor: Colors.black, // background color of the toast
+        textColor: Colors.white, // text color of the toast
+        fontSize: 16.0, // font size
+      );
       _fetchProjects();
     } else {
       print('Error: ${response.body}'); // Handle error
@@ -322,45 +322,76 @@ class _FundingState extends State<Funding> {
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
+          :
+      ListView.builder(
         itemCount: projects.length,
         itemBuilder: (context, index) {
           final project = projects[index];
-          return Card(color: Colors.white,
 
-           margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 5,
-            child: ListTile(
-              contentPadding: EdgeInsets.all(16.0),
-              title: Text(
-                project['projectTittle'] ?? 'No Title',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+          return GestureDetector(
+            onTap: () {
+              // Handle card tap if needed
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.white, Colors.blue.shade50],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInfoRow('Date From', project['dateFrom']),
-                  _buildInfoRow('Date To', project['dateTo']),
-                  _buildInfoRow('Funding Agency', project['fundingAgencyName']),
-                  _buildInfoRow('Location', project['location']),
-                  _buildInfoRow('Amount Received', project['amountReceived']),
-                  _buildInfoRow('Role', project['role']),
-                  _buildInfoRow('Task Handled', project['taskhandled']),
-                  _buildInfoRow('Helping Team', project['helpingTeam']),
-                  _buildInfoRow('Department Name', project['departmentName']),
-                  _buildInfoRow('Approve Status', project['approveStatus']),
-                  _buildInfoRow('Common Date', project['commonDate']),
+                borderRadius: BorderRadius.circular(20), // Smooth corner radius
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blueAccent.withOpacity(0.3),
+                    blurRadius: 15,
+                    spreadRadius: 5,
+                    offset: const Offset(0, 6), // Deep shadow for the "crazy" effect
+                  ),
                 ],
               ),
-              trailing: IconButton(
-                icon: Icon(Icons.edit, color: Colors.blue),
-                onPressed: () => _editProject(project['projectTittleId']),
+              child: Card(
+                color: Colors.transparent, // Use the gradient background
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(20),
+                  title: Text(
+                    project['projectTittle'] ?? 'No Title',
+                    style: GoogleFonts.poppins(
+                      fontSize: 22, // Larger for better readability
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade900,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      _buildInfoRow('Date From', project['dateFrom']),
+                      _buildInfoRow('Date To', project['dateTo']),
+                      _buildInfoRow('Funding Agency', project['fundingAgencyName']),
+                      _buildInfoRow('Location', project['location']),
+                      _buildInfoRow('Amount Received', project['amountReceived']),
+                      _buildInfoRow('Role', project['role']),
+                      _buildInfoRow('Task Handled', project['taskhandled']),
+                      _buildInfoRow('Helping Team', project['helpingTeam']),
+                      _buildInfoRow('Department Name', project['departmentName']),
+                      _buildInfoRow('Approve Status', project['approveStatus']),
+                      _buildInfoRow('Common Date', project['commonDate']),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.edit, color: Colors.blueAccent, size: 28),
+                    onPressed: () => _editProject(project['projectTittleId']),
+                    splashRadius: 25, // Larger splash for interaction effect
+                    tooltip: "Edit Project",
+                  ),
+                ),
               ),
             ),
           );

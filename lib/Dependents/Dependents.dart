@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
@@ -15,7 +16,7 @@ class _DependentsState extends State<Dependents> {
   List relationList = [];
   List genderList = [];
   int? selectedRelationship;
-  int physicallyHandicapped=0;
+  int physicallyHandicapped = 0;
   int associatedWithInstitution = 0;
 
   @override
@@ -36,7 +37,7 @@ class _DependentsState extends State<Dependents> {
           "ColCode": "0001",
           "DependentId": 0,
           "CollegeId": 1,
-          "EmployeeId": "13",
+          "EmployeeId": "17051",
           "UserId": "1",
           "LoginIpAddress": "",
           "LoginSystemName": "",
@@ -46,10 +47,17 @@ class _DependentsState extends State<Dependents> {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      print(data);
       setState(() {
         dependentsList = data['employeeDependentsList'] ?? [];
       });
+    } else {
+      Fluttertoast.showToast(
+        msg: 'Failed to load dependents',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+      );
     }
   }
 
@@ -71,7 +79,6 @@ class _DependentsState extends State<Dependents> {
       });
     }
   }
-  //EMP20240001
 
   Future<void> fetchGenderList() async {
     final url =
@@ -92,23 +99,22 @@ class _DependentsState extends State<Dependents> {
     }
   }
 
-  // Function to show a form for adding or editing dependent
   void showDependentForm({Map? dependent}) {
     // Initialize controllers with existing values or empty strings
     TextEditingController firstNameController =
-        TextEditingController(text: dependent?['firstName'] ?? '');
+    TextEditingController(text: dependent?['firstName'] ?? '');
     TextEditingController lastNameController =
-        TextEditingController(text: dependent?['lastName'] ?? '');
+    TextEditingController(text: dependent?['lastName'] ?? '');
     TextEditingController dateOfBirthController =
-        TextEditingController(text: dependent?['dateOfBirth'] ?? '');
+    TextEditingController(text: dependent?['dateOfBirth'] ?? '');
     TextEditingController aadhaarCardNumberController =
-        TextEditingController(text: dependent?['aadhaarCardNumber'] ?? '');
+    TextEditingController(text: dependent?['aadhaarCardNumber'] ?? '');
     TextEditingController contactNumberController =
-        TextEditingController(text: dependent?['contactNumber'] ?? '');
+    TextEditingController(text: dependent?['contactNumber'] ?? '');
     TextEditingController associationDetailsController =
-        TextEditingController(text: dependent?['associationDetails'] ?? '');
+    TextEditingController(text: dependent?['associationDetails'] ?? '');
     TextEditingController endDateController =
-        TextEditingController(text: dependent?['endDate'] ?? '');
+    TextEditingController(text: dependent?['endDate'] ?? '');
 
     // Initialize state values
     int initialRelationship = dependent?['relationship'] ?? 0;
@@ -120,78 +126,122 @@ class _DependentsState extends State<Dependents> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return
-          AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          title: Text(
-            dependent == null ? 'Add Dependent' : 'Edit Dependent',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
-          ),
-          content:
-          SingleChildScrollView(
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: firstNameController,
-                  decoration: InputDecoration(
-                    labelText: 'First Name',
-                    enabledBorder: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(),
+                Text(
+                  dependent == null ? 'Add Dependent' : 'Edit Dependent',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue.shade800,
                   ),
                 ),
-                SizedBox(height: 10),
-                TextField(
-                  controller: lastNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Last Name',
-                    enabledBorder: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(),
-                  ),
+                SizedBox(height: 16),
+                // First Row: First Name & Last Name
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: firstNameController,
+                        decoration: InputDecoration(
+                          labelText: 'First Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: lastNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Last Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 10),
-                TextField(
-                  controller: dateOfBirthController,
-                  decoration: InputDecoration(
-                    labelText: 'Date of Birth',
-                    enabledBorder: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(),
-                  ),
+                // Date of Birth & Aadhaar
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: dateOfBirthController,
+                        decoration: InputDecoration(
+                          labelText: 'Date of Birth',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                          suffixIcon: Icon(Icons.calendar_today, size: 20),
+                        ),
+                        readOnly: true,
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: dependent == null
+                                ? DateTime.now()
+                                : DateTime.parse(dependent['dateOfBirth']),
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime.now(),
+                          );
+                          if (pickedDate != null) {
+                            dateOfBirthController.text =
+                            "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: aadhaarCardNumberController,
+                        decoration: InputDecoration(
+                          labelText: 'Aadhaar Number',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 10),
-                TextField(
-                  controller: aadhaarCardNumberController,
-                  decoration: InputDecoration(
-                    labelText: 'Aadhaar Card Number',
-                    enabledBorder: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 10),
+                // Contact Number
                 TextField(
                   controller: contactNumberController,
                   decoration: InputDecoration(
                     labelText: 'Contact Number',
-                    enabledBorder: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    isDense: true,
+                    prefixIcon: Icon(Icons.phone, size: 20),
                   ),
+                  keyboardType: TextInputType.phone,
                 ),
+
                 SizedBox(height: 10),
                 DropdownButtonFormField<int>(
-                  value: relationList.isNotEmpty &&
-                          relationList.any(
-                              (item) => item['lookUpId'] == initialRelationship)
+                  value: initialRelationship != 0
                       ? initialRelationship
                       : null,
-                  dropdownColor: Colors.white,
                   items: relationList.map((item) {
                     return DropdownMenuItem<int>(
                       value: item['lookUpId'],
@@ -205,18 +255,16 @@ class _DependentsState extends State<Dependents> {
                   },
                   decoration: InputDecoration(
                     labelText: 'Relationship',
-                    enabledBorder: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    isDense: true,
                   ),
                 ),
                 SizedBox(height: 10),
                 DropdownButtonFormField<int>(
-                  value: genderList.isNotEmpty &&
-                          genderList
-                              .any((item) => item['lookUpId'] == initialGender)
-                      ? initialGender
-                      : null,
-                  dropdownColor: Colors.white,
-                  items: genderList.map<DropdownMenuItem<int>>((item) {
+                  value: initialGender != 0 ? initialGender : null,
+                  items: genderList.map((item) {
                     return DropdownMenuItem<int>(
                       value: item['lookUpId'],
                       child: Text(item['meaning']),
@@ -229,127 +277,207 @@ class _DependentsState extends State<Dependents> {
                   },
                   decoration: InputDecoration(
                     labelText: 'Gender',
-                    enabledBorder: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    isDense: true,
                   ),
                 ),
+                // Relationship & Gender
+
                 SizedBox(height: 10),
-                DropdownButtonFormField<int>(
-                  value: physicallyHandicapped,
-                  decoration:
-                      InputDecoration(labelText: 'Physically Handicapped'),
-                  items: [
-                    DropdownMenuItem(value: 0, child: Text('No')),
-                    DropdownMenuItem(value: 1, child: Text('Yes')),
+                // Physically Handicapped & Associated With Institution
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: physicallyHandicapped,
+                        decoration: InputDecoration(
+                          labelText: 'Physically Handicapped',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 0, child: Text('No')),
+                          DropdownMenuItem(value: 1, child: Text('Yes')),
+                        ],
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            physicallyHandicapped = newValue!;
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: associatedWithInstitution,
+                        decoration: InputDecoration(
+                          labelText: 'Associated With Institution',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 0, child: Text('No')),
+                          DropdownMenuItem(value: 1, child: Text('Yes')),
+                        ],
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            associatedWithInstitution = newValue!;
+                          });
+                        },
+                      ),
+                    ),
                   ],
-                  onChanged: (int? newValue) {
-                    setState(() {
-                      physicallyHandicapped = newValue!;
-                    });
-                  },
                 ),
                 SizedBox(height: 10),
-
-                DropdownButtonFormField<int>(
-                  value: associatedWithInstitution,
-                  decoration:
-                      InputDecoration(labelText: 'Associated With Institution'),
-                  items: [
-                    DropdownMenuItem(value: 0, child: Text('No')),
-                    DropdownMenuItem(value: 1, child: Text('Yes')),
+                // Association Details & End Date
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: associationDetailsController,
+                        decoration: InputDecoration(
+                          labelText: 'Association Details',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: endDateController,
+                        decoration: InputDecoration(
+                          labelText: 'End Date',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          isDense: true,
+                          suffixIcon: Icon(Icons.calendar_today, size: 20),
+                        ),
+                        readOnly: true,
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: dependent == null
+                                ? DateTime.now()
+                                : DateTime.parse(dependent['endDate']),
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime.now(),
+                          );
+                          if (pickedDate != null) {
+                            endDateController.text =
+                            "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+                          }
+                        },
+                      ),
+                    ),
                   ],
-                  onChanged: (int? newValue) {
-                    setState(() {
-                      associatedWithInstitution = newValue!;
-                    });
-                  },
+                ),
+                SizedBox(height: 20),
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey.shade700,
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    SizedBox(width: 10),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      onPressed: () {
+                        if (dependent == null) {
+                          addDependent(
+                            firstNameController.text,
+                            lastNameController.text,
+                            dateOfBirthController.text,
+                            aadhaarCardNumberController.text,
+                            contactNumberController.text,
+                            initialRelationship,
+                            initialGender,
+                            physicallyHandicapped,
+                            associatedWithInstitution,
+                            associationDetailsController.text,
+                            endDateController.text,
+                          );
+                        } else {
+                          editDependent(
+                            dependent['dependentId'],
+                            firstNameController.text,
+                            lastNameController.text,
+                            dateOfBirthController.text,
+                            aadhaarCardNumberController.text,
+                            contactNumberController.text,
+                            initialRelationship,
+                            initialGender,
+                            physicallyHandicapped,
+                            associatedWithInstitution,
+                            associationDetailsController.text,
+                            endDateController.text,
+                          );
+                        }
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.black,
-              ),
-              child: const Text('Cancel',style: TextStyle(fontWeight: FontWeight.bold),),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-              child: const Text('Save'),
-              onPressed: () {
-                if (dependent == null) {
-                  addDependent(
-                    firstNameController.text,
-                    lastNameController.text,
-                    dateOfBirthController.text,
-                    aadhaarCardNumberController.text,
-                    contactNumberController.text,
-                    initialRelationship,
-                    initialGender,
-                    initialPhysicallyHandicapped,
-                    initialAssociatedWithInstitution,
-                    associationDetailsController.text,
-                    endDateController.text,
-                  );
-                } else {
-                  editDependent(
-                    dependent['dependentId'],
-                    firstNameController.text,
-                    lastNameController.text,
-                    dateOfBirthController.text,
-                    aadhaarCardNumberController.text,
-                    contactNumberController.text,
-                    initialRelationship,
-                    initialGender,
-                    initialPhysicallyHandicapped,
-                    initialAssociatedWithInstitution,
-                    associationDetailsController.text,
-                    endDateController.text,
-                  );
-                }
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
   }
 
-  // Add dependent function
   Future<void> addDependent(
-    String firstName,
-    String lastName,
-    String dateOfBirth,
-    String aadhaarCardNumber,
-    String contactNumber,
-    int relationship,
-    int gender,
-    int physicallyHandicapped,
-    int associatedWithInstitution,
-    String associationDetails,
-    String endDate,
-  ) async {
+      String firstName,
+      String lastName,
+      String dateOfBirth,
+      String aadhaarCardNumber,
+      String contactNumber,
+      int relationship,
+      int gender,
+      int physicallyHandicapped,
+      int associatedWithInstitution,
+      String associationDetails,
+      String endDate,
+      ) async {
     final url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeDependents';
-
-    // Prepare the request body
     final requestBody = jsonEncode({
       "GrpCode": "Beesdev",
       "ColCode": "0001",
       "DependentId": 0,
       "CollegeId": 1,
-      "EmployeeId": "13",
+      "EmployeeId": "17051",
       "UserId": "1",
       "LoginIpAddress": "",
       "LoginSystemName": "",
@@ -372,10 +500,6 @@ class _DependentsState extends State<Dependents> {
       ]
     });
 
-    // Print the request body
-    print('Request Body: $requestBody');
-
-    // Send the POST request
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
@@ -384,49 +508,50 @@ class _DependentsState extends State<Dependents> {
 
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(response.body);
-
-      // Check if the message key is present
       if (responseBody.containsKey('message')) {
-        // Show Snackbar with the message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseBody['message']),
-            duration: Duration(seconds: 4),
-          ),
+        Fluttertoast.showToast(
+          msg: responseBody['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
-      print(response.body);
       fetchDependents(); // Reload data
     } else {
-      print('Failed to add dependent: ${response.statusCode}');
+      Fluttertoast.showToast(
+        msg: 'Failed to add dependent',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+      );
     }
   }
 
-  // Edit dependent function
   Future<void> editDependent(
-    int dependentId,
-    String firstName,
-    String lastName,
-    String dateOfBirth,
-    String aadhaarCardNumber,
-    String contactNumber,
-    int relationship,
-    int gender,
-    int physicallyHandicapped,
-    int associatedWithInstitution,
-    String associationDetails,
-    String endDate,
-  ) async {
+      int dependentId,
+      String firstName,
+      String lastName,
+      String dateOfBirth,
+      String aadhaarCardNumber,
+      String contactNumber,
+      int relationship,
+      int gender,
+      int physicallyHandicapped,
+      int associatedWithInstitution,
+      String associationDetails,
+      String endDate,
+      ) async {
     final url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeDependents';
-
-    // Prepare the request body
     final requestBody = jsonEncode({
       "GrpCode": "Beesdev",
       "ColCode": "0001",
       "DependentId": 0, // This may be redundant if using dependentId directly
       "CollegeId": 1,
-      "EmployeeId": "13",
+      "EmployeeId": "17051",
       "UserId": "1",
       "LoginIpAddress": "",
       "LoginSystemName": "",
@@ -449,10 +574,6 @@ class _DependentsState extends State<Dependents> {
       ]
     });
 
-    // Print the request body
-    print('Request Body: $requestBody');
-
-    // Send the POST request
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
@@ -461,36 +582,37 @@ class _DependentsState extends State<Dependents> {
 
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(response.body);
-
-      // Check if the message key is present
       if (responseBody.containsKey('message')) {
-        // Show Snackbar with the message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseBody['message']),
-            duration: Duration(seconds: 4),
-          ),
+        Fluttertoast.showToast(
+          msg: responseBody['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
-      print('Response: ${response.body}');
       fetchDependents(); // Reload data
     } else {
-      print('Failed to edit dependent: ${response.statusCode}');
+      Fluttertoast.showToast(
+        msg: 'Failed to edit dependent',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+      );
     }
   }
 
-  // Delete dependent function
   Future<void> deleteDependent(int dependentId) async {
     final url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeDependents';
-
-    // Prepare the request body
     final requestBody = jsonEncode({
       "GrpCode": "Beesdev",
       "ColCode": "0001",
       "DependentId": dependentId,
       "CollegeId": 1,
-      "EmployeeId": "13",
+      "EmployeeId": "17051",
       "UserId": "1",
       "LoginIpAddress": "",
       "LoginSystemName": "",
@@ -498,10 +620,6 @@ class _DependentsState extends State<Dependents> {
       "EmployeeDependentsVariable": []
     });
 
-    // Print the request body
-    print('Request Body: $requestBody');
-
-    // Send the POST request
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
@@ -510,27 +628,32 @@ class _DependentsState extends State<Dependents> {
 
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(response.body);
-
-      // Check if the message key is present
       if (responseBody.containsKey('message')) {
-        // Show Snackbar with the message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseBody['message']),
-            duration: Duration(seconds: 4),
-          ),
+        Fluttertoast.showToast(
+          msg: responseBody['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
-      print('Response: ${response.body}');
       fetchDependents(); // Reload data
     } else {
-      print('Failed to delete dependent: ${response.statusCode}');
+      Fluttertoast.showToast(
+        msg: 'Failed to delete dependent',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: Container(
@@ -544,56 +667,184 @@ class _DependentsState extends State<Dependents> {
         ),
         title: Text(
           'Employee Dependents',
-          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        elevation: 4,
+        shadowColor: Colors.blueAccent,
       ),
-      body: ListView.builder(
-        itemCount: dependentsList.length,
-        itemBuilder: (context, index) {
-          final dependent = dependentsList[index];
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 3,
-                  blurRadius: 7,
-                  offset: Offset(0, 3), // changes position of shadow
+      body: dependentsList.isEmpty
+          ? Center(
+        child: Text(
+          'No dependents found.',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      )
+          : RefreshIndicator(
+        onRefresh: fetchDependents,
+        child: ListView.builder(
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          itemCount: dependentsList.length,
+          itemBuilder: (context, index) {
+            final dependent = dependentsList[index];
+            return Dismissible(
+              key: Key(dependent['dependentId'].toString()),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                alignment: Alignment.centerRight,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ],
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              title: Text(
-                '${dependent['firstName']} ${dependent['lastName']}',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+              confirmDismiss: (direction) async {
+                return await showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Confirm Delete'),
+                    content:
+                    Text('Are you sure you want to delete this dependent?'),
+                    actions: [
+                      TextButton(
+                        child: Text('Cancel'),
+                        onPressed: () => Navigator.of(context).pop(false),
+                      ),
+                      ElevatedButton(
+                        child: Text('Delete'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(true),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              onDismissed: (direction) {
+                deleteDependent(dependent['dependentId']);
+              },
+              child: Card(color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 3,
+                margin: EdgeInsets.symmetric(vertical: 6),
+                child: ListTile(
+                  contentPadding: EdgeInsets.symmetric(
+                      vertical: 10, horizontal: 16),
+                  title: Text(
+                    '${dependent['firstName']} ${dependent['lastName']}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blueGrey.shade800,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.assignment_ind,
+                              size: 16,                      color: Colors.blue.shade900,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Aadhaar: ${dependent['aadhaarCardNumber']}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.person, size: 16,                    color: Colors.blue.shade900,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Gender: ${dependent['genderName']}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.person, size: 16,                     color: Colors.blue.shade900,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Relation: ${dependent['relationName']}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.phone, size: 16,                     color: Colors.blue.shade900,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Contact: ${dependent['contactNumber']}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.info, size: 16,                     color: Colors.blue.shade900,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Status: ${dependent['status']}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.edit, color: Colors.blueAccent),
+                    onPressed: () => showDependentForm(dependent: dependent),
+                  ),
                 ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInfoText('Aadhaar:', dependent['aadhaarCardNumber']),
-                  _buildInfoText('Gender:', dependent['genderName']),
-                  _buildInfoText('Relation:', dependent['relationName']),
-                  _buildInfoText('Contact:', dependent['contactNumber']),
-                  _buildInfoText('Status:', dependent['status']),
-                ],
-              ),
-              trailing: _buildActionIcons(context, dependent),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDependentForm(),
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
+        tooltip: 'Add Dependent',
       ),
     );
   }
@@ -601,9 +852,29 @@ class _DependentsState extends State<Dependents> {
   Widget _buildInfoText(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(
-        '$label $value',
-    style: TextStyle(color: Colors.black),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey.shade800,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -614,13 +885,8 @@ class _DependentsState extends State<Dependents> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.edit_document, color: Colors.blue),
-
+          icon: Icon(Icons.edit, color: Colors.blueAccent),
           onPressed: () => showDependentForm(dependent: dependent),
-        ),
-        IconButton(
-          icon: Icon(Icons.delete, color: Colors.red),
-          onPressed: () => deleteDependent(dependent['dependentId']),
         ),
       ],
     );

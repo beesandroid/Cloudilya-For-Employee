@@ -1,7 +1,7 @@
-import 'package:cloudilyaemployee/Papers/papers.dart';
+import 'package:cloudilyaemployee/Papers/Manual.dart';
 import 'package:flutter/material.dart';
 
-import 'manual.dart';
+import 'Conference.dart';
 
 class ViewPager extends StatefulWidget {
   const ViewPager({super.key});
@@ -35,8 +35,9 @@ class _ViewPagerState extends State<ViewPager> {
       body: PageView(
         controller: _pageController,
         children: [
+          Conference(),
           EmployeePapersConferencesScreen(),
-          ManualScreen(),
+
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -50,7 +51,7 @@ class _ViewPagerState extends State<ViewPager> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.event_note, color: Colors.black),
-            label: 'Papers/Conferences',
+            label: 'Conferences',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.help, color: Colors.black),

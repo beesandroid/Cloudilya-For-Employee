@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class Payallotment extends StatefulWidget {
-  const Payallotment({super.key});
+class PayAllotment extends StatefulWidget {
+  const PayAllotment({Key? key}) : super(key: key);
 
   @override
-  State<Payallotment> createState() => _PayallotmentState();
+  State<PayAllotment> createState() => _PayAllotmentState();
 }
 
-class _PayallotmentState extends State<Payallotment> {
+class _PayAllotmentState extends State<PayAllotment> with SingleTickerProviderStateMixin {
   List<dynamic> _payAllotmentList = [];
   bool _isLoading = true;
 
@@ -24,7 +24,7 @@ class _PayallotmentState extends State<Payallotment> {
       Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/PayAllotmentDisplay'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "GrpCode": "Bees",
+        "GrpCode": "Beesdev",
         "ColCode": "0001",
         "CollegeId": "1",
         "EmployeeId": "1088",
@@ -41,7 +41,6 @@ class _PayallotmentState extends State<Payallotment> {
         _isLoading = false;
       });
     } else {
-      // Handle error
       setState(() {
         _isLoading = false;
       });
@@ -51,29 +50,23 @@ class _PayallotmentState extends State<Payallotment> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
+      appBar: AppBar(iconTheme: IconThemeData(color: Colors.white),
+        title: const Text(
+          'Pay Allotment',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24.0,color: Colors.white),
+        ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade900, Colors.blue.shade400],
+              colors: [Colors.blue, Colors.blue.shade800],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
-        title: Text(
-          'Pay Allotment',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24.0,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.white,
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
         child: Column(
           children: _payAllotmentList.map((item) => ExpandableCard(item: item)).toList(),
@@ -87,77 +80,84 @@ class _PayallotmentState extends State<Payallotment> {
 class ExpandableCard extends StatefulWidget {
   final dynamic item;
 
-  const ExpandableCard({super.key, required this.item});
+  const ExpandableCard({Key? key, required this.item}) : super(key: key);
 
   @override
   _ExpandableCardState createState() => _ExpandableCardState();
 }
 
-class _ExpandableCardState extends State<ExpandableCard> {
+class _ExpandableCardState extends State<ExpandableCard> with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
+  late AnimationController _controller;
+  late Animation<double> _heightAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _heightAnimation = Tween<double>(begin: 0, end: 100).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
 
-    return
-      AnimatedContainer(
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-        margin: EdgeInsets.all(16.0),
-        padding: EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15.0),
-          border: Border.all(color: Colors.grey.shade300),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 15.0, // Increased blur radius for more pronounced shadow
-              spreadRadius: 5.0, // Spread the shadow outwards
-              offset: Offset(0, 5), // Shadow offset
-            ),
-          ],
-        ),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isExpanded = !_isExpanded;
+          _isExpanded ? _controller.forward() : _controller.reverse();
+        });
+      },
+      child: Card(color: Colors.white,
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 8,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isExpanded = !_isExpanded;
-                });
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    item['payTypeName'],
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.black,
-                  ),
-                ],
+            ListTile(
+              title: Text(
+                item['payTypeName'],
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              trailing: AnimatedRotation(
+                turns: _isExpanded ? 0.5 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: const Icon(Icons.expand_more, size: 30, color: Colors.black),
               ),
             ),
-            if (_isExpanded) ...[
-              SizedBox(height: 12.0),
-              _buildDetailRow('Amount/Percentage:', item['amountOrPercentageName']),
-              _buildDetailRow('Calculation Type:', item['calculationTypeName']),
-              _buildDetailRow('Percentage Calculated On:', item['percentageCalculatedOnName']),
-              _buildDetailRow('Start Date:', item['startDate']),
-              _buildDetailRow('End Date:', item['endDate']),
-            ],
+            SizeTransition(
+              sizeFactor: _controller,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.blue.shade50,
+                child: Column(
+                  children: [
+                    _buildDetailRow('Amount/Percentage:', item['amountOrPercentageName']),
+                    _buildDetailRow('Calculation Type:', item['calculationTypeName']),
+                    _buildDetailRow('Percentage Calculated On:', item['percentageCalculatedOnName']),
+                    _buildDetailRow('Start Date:', item['startDate']),
+                    _buildDetailRow('End Date:', item['endDate']),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
-
-      );}
+      ),
+    );
+  }
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
@@ -167,19 +167,12 @@ class _ExpandableCardState extends State<ExpandableCard> {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 18.0,
-                color: Colors.black,
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.black54),
             ),
           ),
           Text(
             value ?? 'N/A',
-            style: TextStyle(
-              fontSize: 16.0,
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ],
       ),

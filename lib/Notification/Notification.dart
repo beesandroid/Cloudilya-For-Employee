@@ -12,7 +12,7 @@ class _NotiState extends State<Noti> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notification'),
+        title: Text('Notification',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
         iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: BoxDecoration(

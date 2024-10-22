@@ -64,7 +64,7 @@ class DashboardHomePage extends StatelessWidget {
                     ),
                     _buildGridTile(
                       context,
-                      'Material Uploading',
+                      'Material',
                       Icons.format_textdirection_r_to_l,
                       EmployeeMaterialScreen(),
                     ),
@@ -124,23 +124,17 @@ class DashboardHomePage extends StatelessWidget {
               children: [
                 SizedBox(height: 40), // Space for the avatar
                 Text(
-                  'CH Manikanta',
+                  'R Jagadeesh',
                   style: TextStyle(
                     fontSize: 22.0,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue[900],
-                    shadows: [
-                      Shadow(
-                        offset: Offset(1.5, 1.5),
-                        blurRadius: 3.0,
-                        color: Colors.black26,
-                      ),
-                    ],
+
                   ),
                 ),
                 SizedBox(height: 8.0),
                 Text(
-                  'B.Tech, Computer Science',
+                  'Bio Technology',
                   style: TextStyle(
                     color: Colors.blue[800],
                     fontSize: 16.0,
@@ -148,7 +142,7 @@ class DashboardHomePage extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'XYZ College, Section 420',
+                  'GIET College',
                   style: TextStyle(
                     color: Colors.blue[800],
                     fontSize: 16.0,
@@ -156,7 +150,7 @@ class DashboardHomePage extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Hall Ticket: 420',
+                  'Hall Ticket: 05MT2018',
                   style: TextStyle(
                     color: Colors.blue[800],
                     fontSize: 16.0,
@@ -164,7 +158,7 @@ class DashboardHomePage extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Batch: 2020-2024',
+                  'Batch: 2018-Present',
                   style: TextStyle(
                     color: Colors.blue[800],
                     fontWeight: FontWeight.w600,
@@ -185,7 +179,7 @@ class DashboardHomePage extends StatelessWidget {
                 backgroundColor: Colors.blue[50],
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/profilepic.png',
+                    'assets/profilepic.jpeg',
                     fit: BoxFit.cover,
                     width: 120,
                     height: 120,

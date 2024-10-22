@@ -145,7 +145,7 @@ class _BiometricDisplayScreenState extends State<BiometricDisplayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Biometric Data',style: TextStyle(color: Colors.white),),
+        title: Text('Biometric Data',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
         iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: BoxDecoration(

@@ -220,7 +220,8 @@ class _AbsenceState extends State<Absence> with SingleTickerProviderStateMixin {
           : Padding(
               padding: const EdgeInsets.all(10.0),
               child: SingleChildScrollView(
-                child: ExpansionPanelList(
+                child:
+                ExpansionPanelList(
                   elevation: 1,
                   expandedHeaderPadding: const EdgeInsets.all(10),
                   animationDuration: const Duration(milliseconds: 400),
@@ -340,11 +341,16 @@ class _AbsenceState extends State<Absence> with SingleTickerProviderStateMixin {
               color: Colors.grey,
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
+          // Wrap the value Text widget with Expanded or Flexible
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.right, // Align the text to the right
+              overflow: TextOverflow.ellipsis, // Ensure text doesn't overflow
             ),
           ),
         ],

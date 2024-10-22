@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 
 class BankDetails extends StatefulWidget {
@@ -17,7 +18,6 @@ class _BankDetailsState extends State<BankDetails> {
   List<dynamic> paymentTypeList = [];
   String? selectedBank;
   String? selectedPaymentType;
-
   final _accountController = TextEditingController();
   final _ifscController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -40,7 +40,7 @@ class _BankDetailsState extends State<BankDetails> {
       "CollegeId": "1",
       "Id": 0,
       "EffectiveDate": "",
-      "EmployeeId": "49",
+      "EmployeeId": "17051",
       "ProcessingOrder": 0,
       "PayType": 0,
       "Bank": 0,
@@ -58,7 +58,6 @@ class _BankDetailsState extends State<BankDetails> {
       final response = await http.post(url, body: jsonEncode(body), headers: {
         'Content-Type': 'application/json',
       });
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -111,9 +110,7 @@ class _BankDetailsState extends State<BankDetails> {
           bankList = data['bankNameDopDownList'];
         });
       }
-    } catch (e) {
-      // Handle error
-    }
+    } catch (e) {}
   }
 
   Future<void> fetchPaymentTypes() async {
@@ -124,7 +121,6 @@ class _BankDetailsState extends State<BankDetails> {
       "ColCode": "0001",
       "Flag": "29",
     };
-
     try {
       final response = await http.post(url, body: jsonEncode(body), headers: {
         'Content-Type': 'application/json',
@@ -140,20 +136,28 @@ class _BankDetailsState extends State<BankDetails> {
       // Handle error
     }
   }
-
   Future<void> saveBankDetails() async {
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveBankDetails');
+
+    // Find the selected payment type ID
+    final selectedPayTypeId = selectedPaymentType != null
+        ? paymentTypeList.firstWhere((type) => type['meaning'] == selectedPaymentType)['lookUpId']
+        : bankDetails?['payType'];  // Default to existing payType if none is selected
+
     final body = {
       "GrpCode": "Beesdev",
       "ColCode": "0001",
       "CollegeId": "1",
       "Id": bankDetails?['id'] ?? 0,
       "EffectiveDate": bankDetails?['effectiveDate'] ?? "",
-      "EmployeeId": "49",
+      "EmployeeId": "17051",
       "ProcessingOrder": bankDetails?['processingOrder'] ?? 0,
-      "PayType": bankDetails?['payType'] ?? 0,
-      "Bank": selectedBank != null ? bankList.firstWhere((bank) => bank['meaning'] == selectedBank)['lookUpId'] : bankDetails?['bank'],
+      "PayType": selectedPayTypeId,  // Use the mapped payType ID
+      "Bank": selectedBank != null
+          ? bankList
+          .firstWhere((bank) => bank['meaning'] == selectedBank)['lookUpId']
+          : bankDetails?['bank'],
       "AccountNo": _accountController.text,
       "IFSCCode": _ifscController.text,
       "PhoneNumber": _phoneController.text,
@@ -164,29 +168,41 @@ class _BankDetailsState extends State<BankDetails> {
       "Flag": "OVERWRITE"
     };
 
+    print(body);  // You can debug the body to ensure values are correctly mapped
+
     try {
       final response = await http.post(url, body: jsonEncode(body), headers: {
         'Content-Type': 'application/json',
       });
 
       if (response.statusCode == 200) {
-        print(response.body);
+        final responseBody = jsonDecode(response.body);
+
+        Fluttertoast.showToast(
+          msg: responseBody['message'],
+          toastLength: Toast.LENGTH_LONG, // or Toast.LENGTH_SHORT
+          gravity: ToastGravity.BOTTOM, // can be TOP, CENTER, or BOTTOM
+          timeInSecForIosWeb: 1, // duration for iOS Web
+          backgroundColor: Colors.black, // background color of the toast
+          textColor: Colors.white, // text color of the toast
+          fontSize: 16.0, // font size
+        );
         setState(() {
           isEditing = false;
         });
-        fetchBankDetails(); // Refresh after saving
+        fetchBankDetails();  // Refresh after saving
       }
     } catch (e) {
       // Handle exception
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.white),
-
         title: Text('Bank Details',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -223,61 +239,63 @@ class _BankDetailsState extends State<BankDetails> {
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(
-
-        ),
+        decoration: BoxDecoration(),
         child: isLoading
             ? Center(child: CircularProgressIndicator())
             : selectedBank == null
-            ? Center(child: Text('No bank details found.'))
-            : Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDropdownField(
-                    'Bank Name', selectedBank, bankList, (value) {
-                  setState(() {
-                    selectedBank = value;
-                  });
-                }),
-                SizedBox(height: 16.0),
-                _buildDropdownField('Payment Type', selectedPaymentType,
-                    paymentTypeList, (value) {
-                      setState(() {
-                        selectedPaymentType = value;
-                      });
-                    }),
-                SizedBox(height: 16.0),
-                AnimatedSwitcher(
-                  duration: Duration(milliseconds: 500),
-                  child: selectedPaymentType != 'Cash'
-                      ? Column(
-                    key: ValueKey(selectedPaymentType),
-                    children: [
-                      _buildEditableField(
-                          'Account No', _accountController),
-                      _buildEditableField(
-                          'IFSC Code', _ifscController),
-                      _buildEditableField(
-                          'Phone Number', _phoneController),
-                      _buildEditableField(
-                          'Change Reason', _reasonController),
-                    ],
-                  )
-                      : SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-        ),
+                ? Center(child: Text('No bank details found.'))
+                : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildDropdownField(
+                              'Bank Name', selectedBank, bankList, (value) {
+                            setState(() {
+                              selectedBank = value;
+                            });
+                          }),
+                          SizedBox(height: 16.0),
+                          _buildDropdownField('Payment Type',
+                              selectedPaymentType, paymentTypeList, (value) {
+                            setState(() {
+                              selectedPaymentType = value;
+                            });
+                          }),
+                          SizedBox(height: 16.0),
+                          AnimatedSwitcher(
+                            duration: Duration(milliseconds: 500),
+                            child: selectedPaymentType != 'Cash'
+                                ? Column(
+                                    key: ValueKey(selectedPaymentType),
+                                    children: [
+                                      _buildEditableField(
+                                          'Account No', _accountController),
+                                      _buildEditableField(
+                                          'IFSC Code', _ifscController),
+                                      _buildEditableField(
+                                          'Phone Number', _phoneController),
+                                      _buildEditableField(
+                                          'Change Reason', _reasonController),
+                                    ],
+                                  )
+                                : SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
       ),
     );
   }
 
   Widget _buildDropdownField(String label, String? selectedValue,
       List<dynamic> items, ValueChanged<String?> onChanged) {
+    // Debug print statements
+    // print('Selected Value: $selectedValue');
+    // print('Dropdown Items: ${items.map((item) => item['meaning']).toList()}');
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Container(
@@ -295,13 +313,12 @@ class _BankDetailsState extends State<BankDetails> {
         child: DropdownButtonFormField<String>(
           value: selectedValue,
           items: items
-              .map<DropdownMenuItem<String>>(
-                  (item) => DropdownMenuItem<String>(
-                value: item['meaning'],
-                child: Text(item['meaning'],
-                    style: TextStyle(
-                        fontSize: 16.0, color: Colors.black87)),
-              ))
+              .map<DropdownMenuItem<String>>((item) => DropdownMenuItem<String>(
+                    value: item['meaning'],
+                    child: Text(item['meaning'],
+                        style:
+                            TextStyle(fontSize: 16.0, color: Colors.black87)),
+                  ))
               .toList(),
           onChanged: isEditing ? onChanged : null,
           decoration: InputDecoration(
@@ -319,8 +336,7 @@ class _BankDetailsState extends State<BankDetails> {
     );
   }
 
-  Widget _buildEditableField(
-      String label, TextEditingController controller) {
+  Widget _buildEditableField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Container(

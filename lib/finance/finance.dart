@@ -16,6 +16,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     super.initState();
     _fetchData();
   }
+
   Future<void> _fetchData() async {
     final Uri apiUrl = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/FinancePayIncometaxDisplay');
@@ -56,18 +57,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return
-      Scaffold(
-
-      appBar: AppBar(
-
-        title: Text('Finance', style: TextStyle(color: Colors.white)),
-
-        elevation: 0,
-
-        titleTextStyle: TextStyle(
-            color: Colors.black, fontWeight: FontWeight.bold, fontSize: 24),
-        iconTheme: IconThemeData(color: Colors.white),
+    return Scaffold(
+      appBar: AppBar(iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Finance',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 22),),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -78,20 +70,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ),
         ),
       ),
-
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : ListView(
         padding: EdgeInsets.all(8),
         children: [
           _buildSection('Income Tax Details', _buildIncomeTaxDetails()),
-          SizedBox(height: 20),
           _buildSection('Income Tax Deduction Details', _buildIncomeTaxDetailList()),
-          SizedBox(height: 20),
           _buildSection('Tax Slabs', _buildTaxSlabList()),
-          SizedBox(height: 20),
           _buildSection('Monthly Tax Details', _buildMonthlyTaxDetails()),
-          SizedBox(height: 50),
+          SizedBox(height: 55,)
         ],
       ),
     );
@@ -102,32 +90,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.only(top: 12, bottom: 8),
           child: Text(
             title,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ),
-        Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                spreadRadius: 2,
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: content,
-        ),
+        content,
       ],
     );
   }
@@ -138,43 +107,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          columnSpacing: 16,
           headingRowColor: MaterialStateColor.resolveWith(
                   (states) => Colors.blue.withOpacity(0.1)),
-          dataRowColor: MaterialStateColor.resolveWith((states) => Colors.white),
           columns: [
             DataColumn(label: Text('Pay Type')),
             DataColumn(label: Text('Total')),
-            DataColumn(label: Text('First Month')),
-            DataColumn(label: Text('Second Month')),
-            DataColumn(label: Text('Third Month')),
-            DataColumn(label: Text('Fourth Month')),
-            DataColumn(label: Text('Fifth Month')),
-            DataColumn(label: Text('Sixth Month')),
-            DataColumn(label: Text('Seventh Month')),
-            DataColumn(label: Text('Eighth Month')),
-            DataColumn(label: Text('Ninth Month')),
-            DataColumn(label: Text('Tenth Month')),
-            DataColumn(label: Text('Eleventh Month')),
-            DataColumn(label: Text('Twelfth Month')),
+            for (int i = 1; i <= 12; i++) DataColumn(label: Text('Month $i')),
           ],
           rows: items.map<DataRow>((item) {
             return DataRow(
               cells: [
                 DataCell(Text(item['payType'] ?? 'Unknown')),
                 DataCell(Text('${item['total'] ?? '0.0'}')),
-                DataCell(Text('${item['firstMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['secondMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['thirdMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['fourthMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['fifthMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['sixthMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['seventhMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['eighthMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['ninthMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['tenthMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['eleventhMonth']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['twelfthMonth']?.toStringAsFixed(1) ?? '0.0'}')),
+                for (int i = 1; i <= 12; i++)
+                  DataCell(Text('${item['month$i']?.toStringAsFixed(1) ?? '0.0'}')),
               ],
             );
           }).toList(),
@@ -183,15 +129,15 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
     return SizedBox.shrink();
   }
+
   Widget _buildIncomeTaxDetailList() {
     if (_data.containsKey('financePayIncometaxDisplayList1')) {
       var items = _data['financePayIncometaxDisplayList1'] as List<dynamic>;
       return SingleChildScrollView(
-        scrollDirection: Axis.horizontal, // Enable horizontal scrolling
+        scrollDirection: Axis.horizontal,
         child: DataTable(
-          columnSpacing: 16,
-          headingRowColor: MaterialStateColor.resolveWith((states) => Colors.blue.withOpacity(0.1)),
-          dataRowColor: MaterialStateColor.resolveWith((states) => Colors.white),
+          headingRowColor: MaterialStateColor.resolveWith(
+                  (states) => Colors.blue.withOpacity(0.1)),
           columns: [
             DataColumn(label: Text('Section Name')),
             DataColumn(label: Text('Deduction Name')),
@@ -203,7 +149,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 DataCell(Text(item['sectionName'] ?? 'Unknown')),
                 DataCell(Text(item['deductionName'] ?? 'Unknown')),
                 DataCell(Text(
-                    'Usage: ${item['usage'] ?? '0.0'},\n Less: ${item['less'] ?? '0.0'}')),
+                    'Usage: ${item['usage'] ?? '0.0'}, Less: ${item['less'] ?? '0.0'}')),
               ],
             );
           }).toList(),
@@ -216,67 +162,37 @@ class _FinanceScreenState extends State<FinanceScreen> {
   Widget _buildTaxSlabList() {
     if (_data.containsKey('financePayIncometaxDisplayList2')) {
       var items = _data['financePayIncometaxDisplayList2'] as List<dynamic>;
-
-      return SingleChildScrollView(
-        child: Column(
-          children: items.map<Widget>((item) {
-            return Container(
-              margin: EdgeInsets.symmetric(vertical: 8),
-              padding: EdgeInsets.all(8),
+      return Column(
+        children: items.map<Widget>((item) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Container(
               decoration: BoxDecoration(
                 color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
+              padding: EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Slab: ${item['slab'] ?? 'Unknown'}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                  Container(width: double.maxFinite,
+                    child: Text('Slab: ${item['slab'] ?? 'Unknown'}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Amount: ${item['amount'] ?? '0.0'}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Total Tax: ${item['totalTax'] ?? '0.0'}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Cess: ${item['cess'] ?? '0.0'}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Gross Income Tax: ${item['grossincomeTax'] ?? '0.0'}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
+
+                  Text('Amount: ${item['amount'] ?? '0.0'}'),
+                  Text('Total Tax: ${item['totalTax'] ?? '0.0'}'),
+                  Text('Cess: ${item['cess'] ?? '0.0'}'),
+                  Text('Gross Income Tax: ${item['grossincomeTax'] ?? '0.0'}'),
                 ],
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        }).toList(),
       );
     }
-    return Center(child: Text('No tax slab data available.', style: TextStyle(color: Colors.grey)));
+    return Center(child: Text('No tax slab data available.'));
   }
 
   Widget _buildMonthlyTaxDetails() {
@@ -285,40 +201,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          columnSpacing: 16,
-          headingRowColor: MaterialStateColor.resolveWith((states) => Colors.blue.withOpacity(0.1)),
-          dataRowColor: MaterialStateColor.resolveWith((states) => Colors.white),
+          headingRowColor: MaterialStateColor.resolveWith(
+                  (states) => Colors.blue.withOpacity(0.1)),
           columns: [
             DataColumn(label: Text('Month')),
-            DataColumn(label: Text('First Month')),
-            DataColumn(label: Text('Second Month')),
-            DataColumn(label: Text('Third Month')),
-            DataColumn(label: Text('Fourth Month')),
-            DataColumn(label: Text('Fifth Month')),
-            DataColumn(label: Text('Sixth Month')),
-            DataColumn(label: Text('Seventh Month')),
-            DataColumn(label: Text('Eighth Month')),
-            DataColumn(label: Text('Ninth Month')),
-            DataColumn(label: Text('Tenth Month')),
-            DataColumn(label: Text('Eleventh Month')),
-            DataColumn(label: Text('Twelfth Month')),
+            for (int i = 1; i <= 12; i++) DataColumn(label: Text('Month $i')),
           ],
           rows: items.map<DataRow>((item) {
             return DataRow(
               cells: [
                 DataCell(Text(item['month'] ?? 'Unknown')),
-                DataCell(Text('${item['firstMonth1']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['secondMonth2']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['thirdMonth3']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['fourthMonth4']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['fifthMonth5']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['sixthMonth6']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['seventhMonth7']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['eighthMonth8']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['ninthMonth9']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['tenthMonth10']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['eleventhMonth11']?.toStringAsFixed(1) ?? '0.0'}')),
-                DataCell(Text('${item['twelfthMonth12']?.toStringAsFixed(1) ?? '0.0'}')),
+                for (int i = 1; i <= 12; i++)
+                  DataCell(Text('${item['month$i']?.toStringAsFixed(1) ?? '0.0'}')),
               ],
             );
           }).toList(),

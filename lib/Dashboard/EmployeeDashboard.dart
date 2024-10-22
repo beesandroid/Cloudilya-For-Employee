@@ -1,11 +1,15 @@
-import 'package:cloudilyaemployee/Leave/Leave%20Application.dart';
+
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+
 import '../ApprovalDisplay/Approvals.dart';
 import '../CustomDrawer/CustomDrawer.dart';
+import '../Leave/Leave Application.dart';
 import '../Notification/Notification.dart';
 import '../Timetable/TimeTable.dart';
 import 'Dashboard.dart';
+
 
 class EmpDashboard extends StatefulWidget {
   @override
@@ -15,7 +19,7 @@ class EmpDashboard extends StatefulWidget {
 class _EmpDashboardState extends State<EmpDashboard> {
   late PersistentTabController _controller;
 
-  _EmpDashboardState() : _controller = PersistentTabController(initialIndex: 2);
+  _EmpDashboardState() : _controller = PersistentTabController(initialIndex: 0);
 
   List<Widget> _buildScreens() {
     return [
@@ -30,31 +34,31 @@ class _EmpDashboardState extends State<EmpDashboard> {
     'Approvals',
     'Time Table',
     'Dashboard',
-    'Leave', // Corresponding title for the new screen
+    'Leave',
   ];
 
   List<PersistentBottomNavBarItem> _navBarsItems() {
     return [
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.calendar_today),
+        icon: FaIcon(FontAwesomeIcons.file),
         title: ("Approvals"),
         activeColorPrimary: Colors.blueAccent,
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.timeline),
+        icon: FaIcon(FontAwesomeIcons.calendar),
         title: ("Time Table"),
         activeColorPrimary: Colors.blueAccent,
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.dashboard),
+        icon: FaIcon(Icons.menu_book),
         title: ("Dashboard"),
         activeColorPrimary: Colors.blueAccent,
         inactiveColorPrimary: Colors.grey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.time_to_leave),
+        icon: Icon(Icons.holiday_village),
         title: ("Leave"),
         activeColorPrimary: Colors.blueAccent,
         inactiveColorPrimary: Colors.grey,
@@ -75,8 +79,7 @@ class _EmpDashboardState extends State<EmpDashboard> {
           IconButton(
             icon: Icon(Icons.notifications, color: Colors.black),
             onPressed: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => Noti()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => Noti()));
             },
           ),
         ],
@@ -97,3 +100,6 @@ class _EmpDashboardState extends State<EmpDashboard> {
     );
   }
 }
+
+
+

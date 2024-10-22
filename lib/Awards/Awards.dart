@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 
 class Awards extends StatefulWidget {
@@ -12,10 +13,16 @@ class Awards extends StatefulWidget {
 class _AwardsState extends State<Awards> {
   List awards = [];
   List states = [];
-  List countryList = [];// List to store states
+  List awardTypes = [];
+  List typesList = [];
+  int? selectedCountryId;
+  List countryList = [];
   final _formKey = GlobalKey<FormState>();
-  bool isEdit = false; // To track if we're editing an award
-  int? selectedStateId; // To store the selected state ID
+  bool isEdit = false;
+  int? selectedStateId;
+  int? selectedAwardTypeId;
+  int? typeId;
+  int? editingAwardId;
 
   // TextEditingControllers for form fields
   TextEditingController nameController = TextEditingController();
@@ -23,43 +30,90 @@ class _AwardsState extends State<Awards> {
   TextEditingController categoryController = TextEditingController();
   TextEditingController yearController = TextEditingController();
   TextEditingController cashAmountController = TextEditingController();
-  TextEditingController countryController = TextEditingController(); // New
-  TextEditingController stateController = TextEditingController(); // New
-  int? editingAwardId; // To track the AwardId of the award being edited
 
   @override
   void initState() {
     super.initState();
-    fetchStates();
     fetchAwards();
+    fetchAwardTypes();
+    fetchTypes();
     fetchCountries();
+  }
+
+  Future<void> fetchAwardTypes() async {
+    const url =
+        'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/AwardTypeDropdown';
+    final body = {"GrpCode": "Beesdev", "ColCode": "0001", "Flag": "AWARDTYPE"};
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['awardTypeDropdownList'] != null) {
+        setState(() {
+          awardTypes = List<dynamic>.from(data['awardTypeDropdownList'] ?? []);
+        });
+      } else {
+        print('No award types found');
+      }
+    } else {
+      print('Failed to load award types');
+    }
+  }
+
+  Future<void> fetchTypes() async {
+    const url =
+        'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/AwardTypeDropdown';
+    final body = {"GrpCode": "Beesdev", "ColCode": "0001", "Flag": "TYPE"};
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        typesList = data['typeDropdownList'];
+      });
+    } else {
+      print('Failed to load types');
+    }
   }
 
   // Fetch awards from the API
   Future<void> fetchAwards() async {
-    const url = 'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeAwards';
+    const url =
+        'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeAwards';
     final body = {
       "GrpCode": "Beesdev",
       "ColCode": "0001",
       "CollegeId": "1",
-      "EmployeeId": "13",
-      "AwardId": 159,
-      "UserId": 1,
+      "EmployeeId": "17051",
+      "AwardId": 0,
+      "UserId": 0,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "VIEW",
-      "DisplayandSaveEmployeeAwardsVariable": [{
-        "AwardId": 159,
-        "NameOfTheAward": "sdsd",
-        "AwardType": 206,
-        "Country": 99,
-        "State": 0,
-        "InstituteName": "Satya",
-        "Category": "dance",
-        "YearOfAward": 2020,
-        "Type": 209,
-        "CashAmount": 15000.0
-      }]
+      "DisplayandSaveEmployeeAwardsVariable": [
+        {
+          "AwardId": 0,
+          "NameOfTheAward": "",
+          "AwardType": 0,
+          "Country": 0,
+          "State": 0,
+          "InstituteName": "",
+          "Category": "",
+          "YearOfAward": 0,
+          "Type": 0,
+          "CashAmount": 0
+        }
+      ]
     };
 
     final response = await http.post(
@@ -70,15 +124,21 @@ class _AwardsState extends State<Awards> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print(data);
       final message = data['message'];
 
-      if (data['displayandSaveEmployeeAwardsList'].isEmpty && message != null && message.isNotEmpty) {
+      if (data['displayandSaveEmployeeAwardsList'].isEmpty &&
+          message != null &&
+          message.isNotEmpty) {
         // Show SnackBar if message exists
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 3),
-          ),
+        Fluttertoast.showToast(
+          msg: data['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
 
@@ -90,12 +150,14 @@ class _AwardsState extends State<Awards> {
       print('Failed to load awards');
     }
   }
+
   Future<void> fetchStates() async {
-    const url = 'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/StateDropdownforAwards';
+    const url =
+        'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/StateDropdownforAwards';
     final body = {
       "GrpCode": "Bees",
       "ColCode": "0001",
-      "MasterLookUpId": 99,
+      "MasterLookUpId": selectedCountryId ?? 99,
       "Flag": "STATE"
     };
 
@@ -115,33 +177,35 @@ class _AwardsState extends State<Awards> {
     }
   }
 
-
-  // Create or Update award based on flag
   Future<void> createOrUpdateAward(String flag) async {
-    const url = 'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeAwards';
+    const url =
+        'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeAwards';
     final body = {
       "GrpCode": "Beesdev",
       "ColCode": "0001",
       "CollegeId": "1",
-      "EmployeeId": "13",
-      "AwardId": editingAwardId ?? 159,
+      "EmployeeId": "17051",
+      "AwardId": editingAwardId ?? 0,
       "UserId": 1,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": flag,
-      "DisplayandSaveEmployeeAwardsVariable": [{
-        "AwardId": editingAwardId ?? 159,
-        "NameOfTheAward": nameController.text,
-        "AwardType": 206,
-        "Country": int.parse(countryController.text), // New
-        "State": selectedStateId ?? 0, // State ID from the dropdown
-        "InstituteName": instituteController.text,
-        "Category": categoryController.text,
-        "YearOfAward": int.parse(yearController.text),
-        "Type": 209,
-        "CashAmount": double.parse(cashAmountController.text),
-      }]
+      "DisplayandSaveEmployeeAwardsVariable": [
+        {
+          "AwardId": editingAwardId ?? 0,
+          "NameOfTheAward": nameController.text,
+          "AwardType": selectedAwardTypeId ?? 0,
+          "Country": selectedCountryId ?? 0,
+          "State": selectedStateId ?? 0,
+          "InstituteName": instituteController.text,
+          "Category": categoryController.text,
+          "YearOfAward": int.tryParse(yearController.text) ?? 0,
+          "Type": typeId ?? 0,
+          "CashAmount": double.tryParse(cashAmountController.text) ?? 0.0,
+        }
+      ]
     };
+
     print(body);
 
     final response = await http.post(
@@ -153,18 +217,23 @@ class _AwardsState extends State<Awards> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final message = data['message'];
-print(data);
-      if (data['displayandSaveEmployeeAwardsList'].isEmpty && message != null && message.isNotEmpty) {
-        // Show SnackBar if message exists
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 3),
-          ),
+      print(data);
+
+      if (data['displayandSaveEmployeeAwardsList'].isEmpty &&
+          message != null &&
+          message.isNotEmpty) {
+        Fluttertoast.showToast(
+          msg: data['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
       print(response.body);
-      fetchAwards(); // Refresh the list
+      await fetchAwards(); // Refresh the list
       clearForm(); // Clear form after saving
       setState(() {
         isEdit = false;
@@ -174,8 +243,10 @@ print(data);
       print('Failed to save award');
     }
   }
+
   Future<void> fetchCountries() async {
-    const url = 'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/CommonLookUpsDropDown';
+    const url =
+        'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/CommonLookUpsDropDown';
     final body = {
       "GrpCode": "Bees",
       "ColCode": "0001",
@@ -199,17 +270,23 @@ print(data);
   }
 
   // Populate form fields for editing
-  void populateFields(Map<String, dynamic> award) {
+  Future<void> populateFields(Map<String, dynamic> award) async {
     nameController.text = award['nameOfTheAward'] ?? '';
     instituteController.text = award['instituteName'] ?? '';
     categoryController.text = award['category'] ?? '';
     yearController.text = award['yearOfAward']?.toString() ?? '';
     cashAmountController.text = award['cashAmount']?.toString() ?? '';
-    countryController.text = award['country']?.toString() ?? '';
-    selectedStateId = award['state']; // Set the selected state
+
+    selectedCountryId = award['country'];
+    selectedStateId = award['state'];
+    selectedAwardTypeId = award['awardType'];
+    typeId = award['type'];
     editingAwardId = award['awardId'];
+
+    await fetchStates(); // Ensure states are fetched before rebuilding
+
     setState(() {
-      isEdit = true;
+      isEdit = true; // Set to edit mode
     });
   }
 
@@ -220,18 +297,34 @@ print(data);
     categoryController.clear();
     yearController.clear();
     cashAmountController.clear();
-    countryController.clear();
-    selectedStateId = null; // Clear selected state
+    selectedCountryId = null;
+    selectedStateId = null;
+    selectedAwardTypeId = null;
+    typeId = null;
     editingAwardId = null;
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Employee Awards',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+        title: const Text(
+          'Employee Awards',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         iconTheme: IconThemeData(color: Colors.white),
+        actions: [
+          // Add Edit Button
+          if (isEdit)
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                setState(() {
+                  isEdit = true; // Set to edit mode
+                });
+              },
+            ),
+        ],
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -251,7 +344,8 @@ print(data);
               Card(
                 color: Colors.white,
                 elevation: 10,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Form(
@@ -261,28 +355,44 @@ print(data);
                       children: [
                         const Text(
                           'Award Details',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 10),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: TextFormField(
                             controller: nameController,
-                            decoration: const InputDecoration(labelText: 'Name of the Award'),
+                            decoration: const InputDecoration(
+                                labelText: 'Name of the Award'),
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: TextFormField(
                             controller: instituteController,
-                            decoration: const InputDecoration(labelText: 'Institute Name'),
+                            decoration: const InputDecoration(
+                                labelText: 'Institute Name'),
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            controller: categoryController,
-                            decoration: const InputDecoration(labelText: 'Category'),
+                          child: DropdownButtonFormField<int>(
+                            value: selectedAwardTypeId, // Set the value
+                            decoration:
+                                const InputDecoration(labelText: 'Award Type'),
+                            items: awardTypes
+                                .map<DropdownMenuItem<int>>((awardType) {
+                              return DropdownMenuItem<int>(
+                                value: awardType['lookUpId'],
+                                child: Text(awardType['meaning']),
+                              );
+                            }).toList(),
+                            onChanged: (int? value) {
+                              setState(() {
+                                selectedAwardTypeId = value;
+                              });
+                            },
                           ),
                         ),
                         Padding(
@@ -290,7 +400,8 @@ print(data);
                           child: TextFormField(
                             controller: yearController,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(labelText: 'Year of Award'),
+                            decoration: const InputDecoration(
+                                labelText: 'Year of Award'),
                           ),
                         ),
                         Padding(
@@ -298,51 +409,75 @@ print(data);
                           child: TextFormField(
                             controller: cashAmountController,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(labelText: 'Cash Amount'),
+                            decoration:
+                                const InputDecoration(labelText: 'Cash Amount'),
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: DropdownButtonFormField(
-                            decoration: const InputDecoration(labelText: 'Country'),
-                            items: countryList.map<DropdownMenuItem<int>>((country) {
+                          child: DropdownButtonFormField<int>(
+                            value: selectedCountryId,
+                            decoration:
+                                const InputDecoration(labelText: 'Country'),
+                            items: countryList.map((country) {
                               return DropdownMenuItem<int>(
                                 value: country['lookUpId'],
                                 child: Text(country['meaning']),
                               );
                             }).toList(),
-                            onChanged: (int? selectedCountryId) {
-                              if (selectedCountryId != null) {
-                                countryController.text = selectedCountryId.toString();
-                                fetchStates(); // Fetch states for selected country
-                              }
+                            onChanged: (int? value) async {
+                              setState(() {
+                                selectedCountryId = value;
+                                selectedStateId =
+                                    null; // Reset state when country changes
+                              });
+                              await fetchStates(); // Fetch states for the selected country
                             },
                           ),
                         ),
-
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: DropdownButtonFormField<int>(
                             value: selectedStateId,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedStateId = value;
-                              });
-                            },
+                            decoration:
+                                const InputDecoration(labelText: 'State'),
                             items: states.map((state) {
                               return DropdownMenuItem<int>(
                                 value: state['lookUpId'],
                                 child: Text(state['meaning']),
                               );
                             }).toList(),
-                            decoration: const InputDecoration(labelText: 'State'),
+                            onChanged: (int? value) {
+                              setState(() {
+                                selectedStateId = value;
+                              });
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: DropdownButtonFormField<int>(
+                            value: typeId,
+                            onChanged: (int? value) {
+                              setState(() {
+                                typeId = value;
+                              });
+                            },
+                            items: typesList.map((type) {
+                              return DropdownMenuItem<int>(
+                                value: type['lookUpId'],
+                                child: Text(type['meaning']),
+                              );
+                            }).toList(),
+                            decoration:
+                                const InputDecoration(labelText: 'Type'),
                           ),
                         ),
                         const SizedBox(height: 10),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
@@ -350,17 +485,15 @@ print(data);
                                 ),
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
-                                    createOrUpdateAward(isEdit ? 'OVERWRITE' : 'CREATE');
+                                    // If in edit mode, call with 'OVERWRITE' flag
+                                    // Otherwise, call with 'CREATE' flag
+                                    createOrUpdateAward(
+                                        isEdit ? 'OVERWRITE' : 'CREATE');
                                   }
                                 },
-                                child: Text(isEdit ? 'Update Award' : 'Add Award',style: TextStyle(color: Colors.white),),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                                onPressed: clearForm,
-                                child: const Text('Clear Form',style: TextStyle(color: Colors.white),),
+                                child: Text(isEdit ? 'Edit Award' : 'Add Award',
+                                    style:
+                                        const TextStyle(color: Colors.white)),
                               ),
                             ],
                           ),
@@ -382,25 +515,37 @@ print(data);
                 itemCount: awards.length,
                 itemBuilder: (context, index) {
                   final award = awards[index];
-                  return Card(color: Colors.white,
+                  return Card(
+                    color: Colors.white,
                     elevation: 5,
                     child: ListTile(
-                      title: Text(award['nameOfTheAward'] ?? 'No Name',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
+                      title: Text(
+                        award['nameOfTheAward'] ?? 'No Name',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Institute: ${award['instituteName'] ?? ''}'),
-                          Text('Category: ${award['category'] ?? ''}'),
-                          Text('Year: ${award['yearOfAward'] ?? ''}'),
-                          Text('Cash Amount: ${award['cashAmount'] ?? ''}'),
-                          Text('Country: ${award['countryName'] ?? ''}'), // New
-                          Text('State: ${award['stateName'] ?? ''}'), // New
+                          Text(
+                              'Institute: ${award['instituteName'] ?? 'Unknown Institute'}'),
+                          Text(
+                              'Category: ${award['category'] ?? 'No Category'}'),
+                          Text(
+                              'Year: ${award['yearOfAward']?.toString() ?? 'Unknown Year'}'),
+                          Text(
+                              'Cash Amount: ${award['cashAmount']?.toString() ?? 'N/A'}'),
+                          Text(
+                              'Country: ${award['countryName'] ?? 'Unknown Country'}'),
+                          Text(
+                              'State: ${award['stateName'] ?? 'Unknown State'}'),
                         ],
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          populateFields(award);
+                        onPressed: () async {
+                          // When an award is selected for editing, populate the fields
+                          await populateFields(award);
                         },
                       ),
                     ),

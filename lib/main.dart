@@ -260,7 +260,7 @@ class LoginController extends GetxController {
       final response = await _dio.post(
         _loginUrl,
         data: {
-          'GrpCode': '',
+          'GrpCode': 'beesdev',
           'UserName': userName,
           'password': password,
         },
@@ -271,11 +271,13 @@ class LoginController extends GetxController {
 
       if (response.statusCode == 200) {
         dynamic responseData = response.data;
+        // print("sss23019"+responseData);
 
         if (responseData is String) {
           try {
             responseData = jsonDecode(responseData);
           } catch (e) {
+            print(e);
             Get.snackbar(
               'Error',
               'Failed to parse response data: ${e.toString()}',
@@ -302,6 +304,7 @@ class LoginController extends GetxController {
         );
       }
     } catch (e) {
+      print(e);
       Get.snackbar(
         'Error',
         'An error occurred: ${e.toString()}',

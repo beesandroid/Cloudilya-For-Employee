@@ -365,7 +365,7 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
       appBar: AppBar(
         title: Text(
           'Upload Material',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
         ),
         iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: Container(
