@@ -1,11 +1,23 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class LeaveService {
   final String _baseUrl =
       'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/SaveEmployeeLeaves';
 
   Future<List<dynamic>> fetchLeaveTypes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse(_baseUrl),
       headers: {
@@ -14,9 +26,9 @@ class LeaveService {
       body: json.encode(
           {
         "GrpCode": "beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "EmployeeId": "1",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "EmployeeId": employeeId,
         "LeaveId": "0",
         "Description": "",
         "Balance": "0",
@@ -37,6 +49,16 @@ class LeaveService {
 
 
   Future<Map<String, dynamic>> fetchHostelData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayHostelRegistration'),
       headers: <String, String>{
@@ -45,8 +67,8 @@ class LeaveService {
       body: jsonEncode({
         "GrpCode": "Beesdev",
         "ColCode": "0001",
-        "AcYear": "2024 - 2025",
-        "UserTypeName": "STUDENT",
+        "AcYear": acYear,
+        "UserTypeName": userType,
         "RegistrationDate": "",
         "StudentId": "1679",
         "HostelId": "0",

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Model class for dropdown options
 class DropdownOption {
@@ -84,21 +87,31 @@ class _EmployeePapersConferencesScreenState
   }
 
   Future<void> fetchTitles() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse(
           'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeePaperTitles'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "EmployeeId": 17051,
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "EmployeeId": employeeId,
         "TitleId": 0,
-        "UserId": 1,
+        "UserId": adminUserId,
         "LoginIpAddress": "",
         "LoginSystemName": "",
         "Flag": "VIEW",
-        "AcYear": "2024 - 2025",
+        "AcYear": acYear,
         "TitlesVariable": [
           {
             "TitleId": 0,
@@ -213,17 +226,27 @@ class _EmployeePapersConferencesScreenState
   }
 
   Future<void> updateTitle(int titleId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": 17051,
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "TitleId": titleId,
-      "UserId": 1,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "OVERWRITE",
-      "AcYear": "2024 - 2025",
+      "AcYear": acYear,
       "TitlesVariable": [
         {
           "TitleId": titleId,
@@ -258,6 +281,22 @@ class _EmployeePapersConferencesScreenState
       );
 
       if (response.statusCode == 200) {
+        final responseBody = json.decode(response.body);
+        final data = json.decode(response.body);
+        final message = responseBody['message'] ;
+        if (data.containsKey('message')) {
+          // Show Toast with the message
+          Fluttertoast.showToast(
+            msg: data['message'],
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.black,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        }
+
         print('Successfully updated: ${response.body}');
         await fetchTitles(); // Update the titlesList after update
         setState(() {
@@ -273,17 +312,27 @@ class _EmployeePapersConferencesScreenState
   }
 
   Future<void> submitForm() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": 17051,
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId":employeeId,
       "TitleId": 0,
-      "UserId": 1,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "CREATE",
-      "AcYear": "2024 - 2025",
+      "AcYear": acYear,
       "TitlesVariable": [
         {
           "TitleId": 0,
@@ -316,9 +365,30 @@ class _EmployeePapersConferencesScreenState
       body: jsonEncode(requestBody),
     );
     if (response.statusCode == 200) {
+
+
+
+
       print('Successfully submitted: ${response.body}');
       await fetchTitles(); // Refresh the titles list
       clearFormFields();
+      final responseBody = json.decode(response.body);
+      final data = json.decode(response.body);
+      final message = responseBody['message'] ;
+      if (data.containsKey('message')) {
+        // Show Toast with the message
+        Fluttertoast.showToast(
+          msg: data['message'],
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      }
+
+
     } else {
       print('Error submitting form: ${response.statusCode}');
     }
@@ -543,20 +613,35 @@ class _EmployeePapersConferencesScreenState
                               alignment: Alignment.topRight,
                               child: IconButton(
                                 onPressed: () {
-                                  // Populate form fields on tap
-                                  populateFormFields(titleData);
-                                  setState(() {
-                                    editingIndex = index;
-                                  });
+                                  // Get the status of the title
+                                  final String status = titleData['status']?.toString() ?? '';
+
+                                  if (status.toLowerCase() == 'pending') {
+                                    // Show a toast message if the status is pending
+                                    Fluttertoast.showToast(
+                                      msg: "Changes sent for approval cannot be edited now",
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.BOTTOM,
+                                      backgroundColor: Colors.black,
+                                      textColor: Colors.white,
+                                      fontSize: 16.0,
+                                    );
+                                  } else {
+                                    // Allow editing if the status is not pending
+                                    populateFormFields(titleData);
+                                    setState(() {
+                                      editingIndex = index;
+                                    });
+                                  }
                                 },
                                 icon: const Icon(
                                   Icons.edit,
                                   color: Colors.blue,
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 8.0),
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
                               ),
                             )
+
                           ],
                         ),
                       ),

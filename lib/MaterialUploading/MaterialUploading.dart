@@ -1,9 +1,10 @@
-import 'package:cloudilyaemployee/MaterialUploading/view.dart';
+import 'package:cloudilyaforemployee/MaterialUploading/view.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProgramDropdownScreen extends StatefulWidget {
   @override
@@ -35,7 +36,7 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
   List<Map<String, dynamic>> _topicList = [];
 
   List<Map<String, dynamic>> _courseList =
-      []; // Updated to store both courseId and courseName
+  []; // Updated to store both courseId and courseName
   bool _isLoadingPrograms = true,
       _isLoadingBranches = false,
       _isLoadingSemesters = false,
@@ -59,11 +60,11 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
 
     _fetchData('ProgramDropdownForMaterial', {}, (data) {
       _programList = (data['programDropdownForMaterialList'] as List?)
-              ?.map<Map<String, dynamic>>((item) => {
-                    'programId': item['programId'],
-                    'programName': item['programName']
-                  })
-              .toList() ??
+          ?.map<Map<String, dynamic>>((item) => {
+        'programId': item['programId'],
+        'programName': item['programName']
+      })
+          .toList() ??
           [];
       _isLoadingPrograms = false;
     });
@@ -88,28 +89,38 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
   }
 
   Future<void> _fetchEmployeeMaterialData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse(
           'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeMaterialUploading'),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": 1,
-        "UserId": 1,
-        "Id": 1,
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "UserId": adminUserId,
+        "Id": 0,
         "Batch": "",
-        "TopicId": 159,
+        "TopicId": 0,
         "ChooseFile": "23148_Regular.pdf",
         "UpdatedDate": "2024-09-18",
-        "EmployeeId": 3,
-        "ProgramId": 51,
-        "BranchId": 62,
-        "SemId": 47,
+        "EmployeeId": employeeId,
+        "ProgramId": 0,
+        "BranchId": 0,
+        "SemId": 0,
         "SectionId": 0,
-        "CourseId": 1556,
+        "CourseId": 0,
         "MaterialType": 0,
-        "Unit": 5652,
+        "Unit": 0,
         "LoginIpAddress": "",
         "LoginSystemName": "",
         "Flag": "VIEW"
@@ -118,7 +129,7 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
 
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      print(responseData);
+      print("12" + responseData.toString());
       setState(() {
         _employeeMaterialList = responseData['employeeMaterialUploadingList'];
         _isLoading = false;
@@ -133,6 +144,16 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
 
   Future<void> _fetchData(String endpoint, Map<String, String> body,
       Function(Map) onSuccess) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse(
           'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/$endpoint'),
@@ -140,7 +161,7 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
       body: json.encode({
         "GrpCode": "Beesdev",
         "ColCode": "0001",
-        "EmployeeId": "3",
+        "EmployeeId": employeeId,
         ...body,
       }),
     );
@@ -156,7 +177,6 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
     if (_selectedProgram == null ||
         _selectedBranch == null ||
         _selectedSemester == null ||
-        _selectedSection == null ||
         _selectedCourse == null ||
         _selectedMaterialType == null ||
         _selectedUnitId == null ||
@@ -166,18 +186,28 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
       print('Please fill in all required fields and select files.');
       return;
     }
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
 
     final requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "UserId": 1,
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "UserId": adminUserId,
       "Id": 1,
       "Batch": "",
       "TopicId": int.parse(_selectedTopic!),
       "ChooseFile": _selectedFiles!.map((file) => file.name).join(', '),
       "UpdatedDate": _todayDate,
-      "EmployeeId": "3",
+      "EmployeeId": employeeId,
       "ProgramId": int.parse(_selectedProgram!),
       "BranchId": _branchId,
       "SemId": int.parse(_semId!),
@@ -247,11 +277,11 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
 
       final topics =
           (responseData['materialUploadingTopicDropdownList'] as List?)
-                  ?.map<Map<String, dynamic>>((item) => {
-                        'topicId': item['topicId'],
-                        'topicName': item['topicName'],
-                      })
-                  .toList() ??
+              ?.map<Map<String, dynamic>>((item) => {
+            'topicId': item['topicId'],
+            'topicName': item['topicName'],
+          })
+              .toList() ??
               [];
 
       setState(() {
@@ -340,12 +370,12 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
 
       final units =
           (responseData['materialUploadingForUnitsDropdownList'] as List?)
-                  ?.map((item) {
-                return {
-                  'unitId': item['unitId'] as int,
-                  'unitName': item['unitName'] as String,
-                };
-              }).toList() ??
+              ?.map((item) {
+            return {
+              'unitId': item['unitId'] as int,
+              'unitName': item['unitName'] as String,
+            };
+          }).toList() ??
               [];
 
       setState(() {
@@ -365,7 +395,8 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
       appBar: AppBar(
         title: Text(
           'Upload Material',
-          style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: Container(
@@ -407,21 +438,25 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                 });
                 _fetchData(
                     'MaterialUploadingBranchDropdown', {'ProgramId': value!},
-                    (data) {
-                  setState(() {
-                    _branchList =
-                        (data['materialUploadingBranchDropdownList'] as List?)
+                        (data) {
+                      setState(() {
+                        _branchList =
+                            (data['materialUploadingBranchDropdownList'] as List?)
                                 ?.map<String>(
                                     (item) => item['branchName'] as String)
                                 .toList() ??
-                            [];
-                    _branchId =
-                        (data['materialUploadingBranchDropdownList'] as List?)
-                            ?.first['branchId']
-                            .toString();
-                    _isLoadingBranches = false;
-                  });
-                });
+                                [];
+                        // Set _branchId based on the selected branch
+                        if (_branchList.isNotEmpty) {
+                          _branchId = (data[
+                          'materialUploadingBranchDropdownList']
+                          as List?)
+                              ?.first['branchId']
+                              .toString();
+                        }
+                        _isLoadingBranches = false;
+                      });
+                    });
               },
             ),
             if (_isLoadingBranches)
@@ -432,32 +467,38 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                 hint: 'Choose Branch',
                 items: _branchList
                     .map((branch) => DropdownMenuItem<String>(
-                          value: branch,
-                          child: Text(branch),
-                        ))
+                  value: branch,
+                  child: Text(branch),
+                ))
                     .toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedBranch = value;
+                    // Set _branchId based on the selected branch
+                    // You might need to find the branchId from _branchList
+                    _branchId = (value != null) ? _branchId : null;
                     _isLoadingSemesters = true;
                   });
                   _fetchData('MaterialUploadingSemesterDropdown',
                       {'ProgramId': _selectedProgram!}, (data) {
-                    setState(() {
-                      _semesterList =
-                          (data['materialUploadingSemesterDropdownList']
-                                      as List?)
+                        setState(() {
+                          _semesterList =
+                              (data['materialUploadingSemesterDropdownList']
+                              as List?)
                                   ?.map<String>(
                                       (item) => item['semester'] as String)
                                   .toList() ??
-                              [];
-                      _semId = (data['materialUploadingSemesterDropdownList']
-                              as List?)
-                          ?.first['semId']
-                          .toString();
-                      _isLoadingSemesters = false;
-                    });
-                  });
+                                  [];
+                          if (_semesterList.isNotEmpty) {
+                            _semId = (data[
+                            'materialUploadingSemesterDropdownList']
+                            as List?)
+                                ?.first['semId']
+                                .toString();
+                          }
+                          _isLoadingSemesters = false;
+                        });
+                      });
                 },
               ),
             if (_isLoadingSemesters)
@@ -468,29 +509,67 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                 hint: 'Choose Semester',
                 items: _semesterList
                     .map((semester) => DropdownMenuItem<String>(
-                          value: semester,
-                          child: Text(semester),
-                        ))
+                  value: semester,
+                  child: Text(semester),
+                ))
                     .toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedSemester = value;
                     _isLoadingSections = true;
+                    _sectionList.clear();
+                    _selectedSection = null;
+                    _courseList.clear();
+                    _selectedCourse = null;
                   });
                   _fetchData('MaterialUploadingSectionDropdown', {}, (data) {
                     setState(() {
                       _sectionList =
                           (data['materialUploadingSectionDropdownList']
-                                      as List?)
-                                  ?.map<String>(
-                                      (item) => item['sectionName'] as String)
-                                  .toList() ??
+                          as List?)
+                              ?.map<String>(
+                                  (item) => item['sectionName'] as String)
+                              .toList() ??
                               [];
-                      _sectionId = (data['materialUploadingSectionDropdownList']
-                              as List?)
-                          ?.first['sectionId']
-                          .toString();
-                      _isLoadingSections = false;
+                      if (_sectionList.isNotEmpty) {
+                        // Sections are available
+                        _sectionId = (data[
+                        'materialUploadingSectionDropdownList']
+                        as List?)
+                            ?.first['sectionId']
+                            .toString();
+                        _isLoadingSections = false;
+                      } else {
+                        // No sections available
+                        _sectionId = '0';
+                        _isLoadingSections = false;
+                        _isLoadingCourses = true;
+                        // Fetch courses directly
+                        final requestBody = {
+                          "GrpCode": "Beesdev",
+                          "ColCode": "0001",
+                          "CollegeId": "1",
+                          "ProgramId": _selectedProgram!,
+                          "SemId": _semId!,
+                          "BranchId": _branchId!,
+                          "SectionId": _sectionId!,
+                        };
+                        _fetchData('MaterialUploadingCourseDropDown',
+                            requestBody, (data) {
+                              setState(() {
+                                _courseList = (data[
+                                'materialUploadingCourseDropDownList']
+                                as List?)
+                                    ?.map<Map<String, dynamic>>((item) => {
+                                  'courseId': item['courseId'],
+                                  'courseName': item['courseName']
+                                })
+                                    .toList() ??
+                                    [];
+                                _isLoadingCourses = false;
+                              });
+                            });
+                      }
                     });
                   });
                 },
@@ -503,13 +582,15 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                 hint: 'Choose Section',
                 items: _sectionList
                     .map((section) => DropdownMenuItem<String>(
-                          value: section,
-                          child: Text(section),
-                        ))
+                  value: section,
+                  child: Text(section),
+                ))
                     .toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedSection = value;
+                    // Update _sectionId based on the selected section
+                    _sectionId = (value != null) ? _sectionId : '0';
                     _isLoadingCourses = true;
                   });
                   final requestBody = {
@@ -522,21 +603,24 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                     "SectionId": _sectionId!,
                   };
                   _fetchData('MaterialUploadingCourseDropDown', requestBody,
-                      (data) {
-                    setState(() {
-                      _courseList =
-                          (data['materialUploadingCourseDropDownList'] as List?)
+                          (data) {
+                        setState(() {
+                          _courseList =
+                              (data['materialUploadingCourseDropDownList'] as List?)
                                   ?.map<Map<String, dynamic>>((item) => {
-                                        'courseId': item['courseId'],
-                                        'courseName': item['courseName']
-                                      })
+                                'courseId': item['courseId'],
+                                'courseName': item['courseName']
+                              })
                                   .toList() ??
-                              [];
-                      _isLoadingCourses = false;
-                    });
-                  });
+                                  [];
+                          _isLoadingCourses = false;
+                        });
+                      });
                 },
-              ),
+              )
+            else if (_sectionList.isEmpty)
+              // No sections available, fetch courses directly
+                SizedBox(),
             if (_isLoadingCourses)
               _buildLoadingIndicator()
             else if (_courseList.isNotEmpty)
@@ -555,7 +639,7 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                     _courseId = _courseList
                         .firstWhere(
                           (course) => course['courseName'] == value,
-                        )['courseId']
+                    )['courseId']
                         .toString();
                     print('Selected Course ID: $_courseId');
                     _isLoadingMaterialTypes = true;
@@ -571,9 +655,9 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                 hint: 'Choose Material Type',
                 items: _materialTypeList
                     .map((materialType) => DropdownMenuItem<String>(
-                          value: materialType,
-                          child: Text(materialType),
-                        ))
+                  value: materialType,
+                  child: Text(materialType),
+                ))
                     .toList(),
                 onChanged: (value) {
                   setState(() {
@@ -613,9 +697,9 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                 hint: 'Choose Topic',
                 items: _topicList
                     .map((topic) => DropdownMenuItem<String>(
-                          value: topic['topicId'].toString(),
-                          child: Text(topic['topicName']),
-                        ))
+                  value: topic['topicId'].toString(),
+                  child: Text(topic['topicName']),
+                ))
                     .toList(),
                 onChanged: (value) {
                   setState(() {
@@ -627,7 +711,8 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
             if (_topicList.isNotEmpty) ...[
               Text(
                 'Today\'s Date: $_todayDate',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 16),
               Row(
@@ -648,7 +733,9 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
                 ],
               ),
               if (_selectedFiles != null)
-                ..._selectedFiles!.map((file) => Text(file.name)).toList(),
+                ..._selectedFiles!
+                    .map((file) => Text(file.name))
+                    .toList(),
               SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -690,7 +777,8 @@ class _ProgramDropdownScreenState extends State<ProgramDropdownScreen> {
         onChanged: onChanged,
         decoration: InputDecoration(
           border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );

@@ -1,189 +1,157 @@
-import 'package:cloudilyaemployee/Attendence/Attendence.dart';
-import 'package:cloudilyaemployee/biometric/Biometric.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloudilyaforemployee/Attendence/Attendence.dart';
+import 'package:cloudilyaforemployee/biometric/Biometric.dart';
 import '../Absence/Absence.dart';
-import '../Awards/Awards.dart';
 import '../MApplications/MyApplications.dart';
 import '../MaterialUploading/view.dart';
+import '../MyInfo/Employment.dart';
+import '../MyInfo/PayAllotment.dart';
 import '../Requests/requests.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class DashboardHomePage extends StatelessWidget {
+import '../finance/finance.dart';
+
+class DashboardHomePage extends StatefulWidget {
+  @override
+  _DashboardHomePageState createState() => _DashboardHomePageState();
+}
+
+class _DashboardHomePageState extends State<DashboardHomePage> {
+  String? employeeId;
+  String? userType;
+  String? finYear;
+  String? acYear;
+  String? adminUserId;
+  String? collegeId;
+  String? colCode;
+  String? collegename;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEmployeeDetails();
+  }
+
+  Future<void> _loadEmployeeDetails() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userType = prefs.getString('userType');
+      finYear = prefs.getString('finYear');
+      acYear = prefs.getString('acYear');
+      adminUserId = prefs.getString('adminUserId');
+      employeeId = prefs.getString('userName');
+      collegeId = prefs.getString('collegeId');
+      colCode = prefs.getString('colCode');
+      collegename = prefs.getString('collegename');
+      print("college:"+collegename.toString());
+
+    });
+  }
+//EMP20240932
   @override
   Widget build(BuildContext context) {
+    // Using ListView for scrollable content
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.blue[50]!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            // Ensure Column only takes as much height as needed
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: _buildStudentInfoCard(),
-              ),
-              SizedBox(height: 16.0),
-              // Use Container with fixed height
-              Container(
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  padding: const EdgeInsets.all(16.0),
-                  crossAxisSpacing: 10.0,
-                  mainAxisSpacing: 10.0,
-                  childAspectRatio: 1.0,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: <Widget>[
-                    _buildGridTile(
-                      context,
-                      'Attendance',
-                      Icons.school,
-                      AttendanceScreen(),
-                    ),
-                    _buildGridTile(
-                      context,
-                      'MyApplication',
-                      Icons.settings_applications,
-                      Myapplications(),
-                    ),
-                    _buildGridTile(
-                      context,
-                      'Requests',
-                      Icons.view_array,
-                      Requests(),
-                    ),
-                    _buildGridTile(
-                      context,
-                      'Material',
-                      Icons.format_textdirection_r_to_l,
-                      EmployeeMaterialScreen(),
-                    ),
-                    _buildGridTile(
-                      context,
-                      'Absence',
-                      Icons.holiday_village,
-                      Absence(),
-                    ),
+      backgroundColor: Colors.white, // Set background to white
 
-                    _buildGridTile(
-                      context,
-                      'Biometrics',
-                      Icons.fingerprint,
-                      BiometricDisplayScreen(),
+      // Remove AppBar and make content scrollable
+      body: ListView(
+        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        children: [
+          _buildUserInfoCard(),
+          SizedBox(height: 20.0),
+          _buildGridMenu(context),
+        ],
+      ),
+    );
+  }
+
+  // Redesigned User Info Card
+  Widget _buildUserInfoCard() {
+    return Card(
+      elevation: 10, // Soft elevation for a floating effect
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shadowColor: Colors.grey.withOpacity(0.3),
+      color: Colors.white,
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+
+        ),
+        child: Row(
+          children: [
+            // Profile Avatar
+            CircleAvatar(
+              radius: 35, // Compact size
+              backgroundImage: AssetImage('assets/profilepic.jpeg'),
+              backgroundColor: Colors.transparent,
+            ),
+            SizedBox(width: 15),
+            // User Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // User Name
+                  Text(
+                    'R Jagadeesh',
+                    style: GoogleFonts.poppins(
+                      textStyle: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
                     ),
-                    SizedBox(height: 40),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 5.0),
+                  // User Information Rows
+                  _buildUserInfoRow('College : ', collegename ?? 'Loading...'),
+
+                  _buildUserInfoRow('Emp Number : ', employeeId ?? 'Loading...'),
+
+
+                  _buildUserInfoRow('Academic Year : ', acYear ?? 'Loading...'),
+
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStudentInfoCard() {
-    return Center(
-      child: Stack(
-        clipBehavior: Clip.none,
+  Widget _buildUserInfoRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: double.infinity,
-            // Adjust width to take full width
-            margin: EdgeInsets.symmetric(vertical: 40.0),
-            padding: EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(24.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.2),
-                  spreadRadius: 5,
-                  blurRadius: 15,
-                  offset: Offset(0, 10),
-                ),
-              ],
-              gradient: LinearGradient(
-                colors: [Colors.white, Colors.blue[50]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              textStyle: TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 40), // Space for the avatar
-                Text(
-                  'R Jagadeesh',
-                  style: TextStyle(
-                    fontSize: 22.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[900],
-
-                  ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  'Bio Technology',
-                  style: TextStyle(
-                    color: Colors.blue[800],
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'GIET College',
-                  style: TextStyle(
-                    color: Colors.blue[800],
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Hall Ticket: 05MT2018',
-                  style: TextStyle(
-                    color: Colors.blue[800],
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Batch: 2018-Present',
-                  style: TextStyle(
-                    color: Colors.blue[800],
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16.0,
-                  ),
-                ),
-              ],
-            ),
           ),
-          Positioned(
-            top: -25,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.blue[50],
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/profilepic.jpeg',
-                    fit: BoxFit.cover,
-                    width: 120,
-                    height: 120,
-                  ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: GoogleFonts.poppins(
+                textStyle: TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.grey[600],
                 ),
               ),
             ),
@@ -193,41 +161,146 @@ class DashboardHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildGridTile(
-      BuildContext context, String title, IconData icon, Widget? screen) {
-    return GestureDetector(
-      onTap: () {
-        if (screen != null) {
-          Get.to(() => screen);
-        }
+
+  // Helper method to build user information rows
+
+  // Grid Menu for navigation
+  Widget _buildGridMenu(BuildContext context) {
+    return GridView.builder(
+      itemCount: _menuItems.length,
+      shrinkWrap: true, // Shrink to fit content
+      physics: NeverScrollableScrollPhysics(), // Disable internal scrolling
+      padding: EdgeInsets.zero,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3, // 3 columns
+        crossAxisSpacing: 12, // Reduced spacing for compactness
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.8, // Adjusted for better fit
+      ),
+      itemBuilder: (context, index) {
+        final item = _menuItems[index];
+        return _buildCardGridTile(context, item);
       },
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.blue[50],
-              child: Icon(
-                icon,
-                size: 30,
-                color: Colors.blue,
+    );
+  }
+
+  // Define menu items in a list for scalability
+  final List<_MenuItem> _menuItems = [
+    _MenuItem(
+      title: 'Attendance',
+      icon: Icons.how_to_reg, // Represents registration/check-in
+      screen: AttendanceScreen(),
+      color: Colors.blueAccent,
+    ),
+    _MenuItem(
+      title: 'Material',
+      icon: Icons.menu_book, // Represents educational materials
+      screen: EmployeeMaterialScreen(),
+      color: Colors.purpleAccent,
+    ),
+    _MenuItem(
+      title: 'Biometrics',
+      icon: Icons.fingerprint, // Represents biometric features
+      screen: BiometricDisplayScreen(),
+      color: Colors.tealAccent,
+    ),
+    _MenuItem(
+      title: 'My Application',
+      icon: Icons.person, // Represents user-specific applications
+      screen: Myapplications(),
+      color: Colors.greenAccent,
+    ),
+    _MenuItem(
+      title: 'Requests',
+      icon: Icons.mail_outline, // Represents messaging or requests
+      screen: Requests(),
+      color: Colors.orangeAccent,
+    ),
+
+    _MenuItem(
+      title: 'Absence',
+      icon: Icons.event_busy, // Represents absence or busy status
+      screen: Absence(),
+      color: Colors.redAccent,
+    ),
+     _MenuItem(
+      title: 'Finance',
+      icon: EvaIcons.briefcaseOutline, // Represents biometric features
+      screen: FinanceScreen(),
+      color: Colors.blue,
+    ), _MenuItem(
+      title: 'Pay Allotment',
+      icon: FontAwesomeIcons.moneyBillTransfer, // Represents biometric features
+      screen: PayAllotment(),
+      color: Colors.brown,
+    ),_MenuItem(
+      title: 'Employment Details',
+      icon: FontAwesomeIcons.addressCard, // Represents biometric features
+      screen: Employment(),
+      color: Colors.green,
+    ),
+  ];
+
+  // Helper method to build individual grid tiles
+  Widget _buildCardGridTile(BuildContext context, _MenuItem item) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        Get.to(() => item.screen);
+      },
+      child: Card(
+        elevation: 5, // Slightly reduced elevation for subtlety
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shadowColor: Colors.grey.withOpacity(0.3),
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0), // Reduced padding for compactness
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon with accent color
+              CircleAvatar(
+                backgroundColor: item.color.withOpacity(0.1),
+                radius: 20, // Reduced radius for smaller tiles
+                child: Icon(
+                  item.icon,
+                  size: 20, // Adjusted size for better fit
+                  color: item.color,
+                ),
               ),
-            ),
-            SizedBox(height: 10.0),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14.0,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+              SizedBox(height: 10),
+              // Menu Item Title
+              Text(
+                item.title,
+                style: GoogleFonts.poppins(
+                  textStyle: TextStyle(
+                    fontSize: 12, // Further reduced font size
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis, // Prevents text overflow
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+// Helper class for menu items
+class _MenuItem {
+  final String title;
+  final IconData icon;
+  final Widget screen;
+  final Color color;
+
+  _MenuItem({
+    required this.title,
+    required this.icon,
+    required this.screen,
+    required this.color,
+  });
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Myapplications extends StatefulWidget {
   const Myapplications({super.key});
 
@@ -19,16 +21,26 @@ class _MyapplicationsState extends State<Myapplications> {
   }
 
   Future<void> _fetchApplicationData() async {
-    const apiUrl =
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+    final apiUrl =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/ClassAdjustmentDataVIEW';
-    const requestBody = {
+    final requestBody = {
       "GrpCode": "BEESdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "3",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "ApplicationId": "0",
       "AdjustmentId": "0",
-      "UserId": "759",
+      "UserId": adminUserId,
       "Flag": "MYAPPLICATION"
     };
 
@@ -53,6 +65,16 @@ class _MyapplicationsState extends State<Myapplications> {
   }
 
   Future<void> _viewDetails(int applicationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     const apiUrl =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/ClassAdjustmentDataVIEW';
 
@@ -64,12 +86,12 @@ class _MyapplicationsState extends State<Myapplications> {
       for (String flag in flags) {
         final requestBody = {
           "GrpCode": "BEESdev",
-          "ColCode": "0001",
-          "CollegeId": "1",
-          "EmployeeId": "3",
+          "ColCode": colCode,
+          "CollegeId": collegeId,
+          "EmployeeId": employeeId,
           "AdjustmentId": "0",
           "applicationId": applicationId,
-          "UserId": "759",
+          "UserId": adminUserId,
           "Flag": flag
         };
 

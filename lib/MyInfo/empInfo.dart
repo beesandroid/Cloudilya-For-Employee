@@ -536,50 +536,68 @@ class _EmployeeInfoState extends State<EmployeeInfo> {
           IconButton(
             icon: Icon(_isEditing ? Icons.save : Icons.edit),
             onPressed: () {
-              if (_isEditing) {
-                if (descriptionController.text.isNotEmpty) {
-                  if (_employeeData.isNotEmpty && _employeeData['id'] != null) {
-                    _updateEmployeeDetails(_employeeData['id']);
+              String status = _employeeData['status']?.toString().toLowerCase() ?? '';
+
+              // Check if the status is "pending" or "Pending"
+              if (status == 'pending') {
+                // Show a toast message if the status is pending
+                Fluttertoast.showToast(
+                  msg: "Changes sent for approval cannot be edited now",
+                  toastLength: Toast.LENGTH_LONG,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
+                );
+              } else {
+                if (_isEditing) {
+                  if (descriptionController.text.isNotEmpty) {
+                    if (_employeeData.isNotEmpty && _employeeData['id'] != null) {
+                      _updateEmployeeDetails(_employeeData['id']);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('No employee ID found')),
+                      );
+                    }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('No employee ID found')),
+                      SnackBar(content: Text('Please enter a reason')),
                     );
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please enter a reason')),
-                  );
-                }
-              } else {
-                setState(() {
-                  _isEditing = true;
+                  setState(() {
+                    _isEditing = true;
 
-                  _controllers.forEach((key, controller) {
-                    controller.text = _employeeData[key]?.toString() ?? '';
+                    // Initialize the controllers with current data
+                    _controllers.forEach((key, controller) {
+                      controller.text = _employeeData[key]?.toString() ?? '';
+                    });
+
+                    // Set dropdowns to their current values
+                    _employeeData['maritalStatus'] ??= maritalStatusList.isNotEmpty
+                        ? maritalStatusList[0]['lookUpId']
+                        : null;
+                    _employeeData['nationality'] ??= nationalityList.isNotEmpty
+                        ? nationalityList[0]['lookUpId']
+                        : null;
+                    _employeeData['religion'] ??= religionList.isNotEmpty
+                        ? religionList[0]['lookUpId']
+                        : null;
+                    _employeeData['casteCategory'] ??= casteCategoryList.isNotEmpty
+                        ? casteCategoryList[0]['lookUpId']
+                        : null;
+                    _employeeData['caste'] ??= casteList.isNotEmpty
+                        ? casteList[0]['lookUpId']
+                        : null;
+                    _employeeData['prefixList'] ??= prefixList.isNotEmpty
+                        ? prefixList[0]['lookUpId']
+                        : null;
                   });
-
-                  _employeeData['maritalStatus'] ??=
-                      maritalStatusList.isNotEmpty
-                          ? maritalStatusList[0]['lookUpId']
-                          : null;
-                  _employeeData['nationality'] ??= nationalityList.isNotEmpty
-                      ? nationalityList[0]['lookUpId']
-                      : null;
-                  _employeeData['religion'] ??= religionList.isNotEmpty
-                      ? religionList[0]['lookUpId']
-                      : null;
-                  _employeeData['casteCategory'] ??=
-                      casteCategoryList.isNotEmpty
-                          ? casteCategoryList[0]['lookUpId']
-                          : null;
-                  _employeeData['caste'] ??=
-                      casteList.isNotEmpty ? casteList[0]['lookUpId'] : null;
-                  _employeeData['prefixList'] ??=
-                      prefixList.isNotEmpty ? prefixList[0]['lookUpId'] : null;
-                });
+                }
               }
             },
           ),
+
         ],
       ),
       body: _employeeData.isEmpty

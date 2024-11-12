@@ -3,6 +3,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Experience extends StatefulWidget {
   const Experience({super.key});
 
@@ -132,21 +134,32 @@ class _ExperienceState extends State<Experience> {
 
   // Fetch experience data
   Future<void> fetchExperienceData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+    final userName = prefs.getString('userName');
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeExperience');
     final body = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
       "EmpExpId": 0,
-      "EmployeeId": "17051",
+      "EmployeeId": employeeId,
       "StartDate": "",
       "EndDate": "",
       "LoginIpAddress": "",
       "LoginSystemName": "",
-      "UserId": 1,
+      "UserId": adminUserId,
       "Flag": "VIEW",
-      "EmployeeNumber": "EMP20240011",
+      "EmployeeNumber": userName,
       "DisplayandSaveEmployeeExperienceVariable": [
         {
           "EmpExpId": 0,
@@ -169,6 +182,7 @@ class _ExperienceState extends State<Experience> {
       body: json.encode(body),
     );
     if (response.statusCode == 200) {
+      print(response.body);
       setState(() {
         experienceList =
         json.decode(response.body)['displayandSaveEmployeeExperienceList'];
@@ -179,19 +193,30 @@ class _ExperienceState extends State<Experience> {
   }
 
   Future<void> saveExperience(String flag, dynamic experienceData) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+    final userName = prefs.getString('userName');
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeExperience');
     final body = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
       "EmpExpId": experienceData['empExpId'] ?? 0,
-      "EmployeeId": "17051",
+      "EmployeeId": employeeId,
       "StartDate": experienceData['dateFrom'],
       "EndDate": experienceData['dateTo'],
-      "UserId": 1,
+      "UserId": adminUserId,
       "Flag": flag,
-      "EmployeeNumber": "EMP20240011",
+      "EmployeeNumber": userName,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "DisplayandSaveEmployeeExperienceVariable": [
@@ -420,7 +445,7 @@ class _ExperienceState extends State<Experience> {
                         vertical: 8, horizontal: 12),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.white, Colors.grey[200]!],
+                        colors: [Colors.white, Colors.blue[100]!],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -465,36 +490,46 @@ class _ExperienceState extends State<Experience> {
                               'Medium:', experience['mediumName'] ?? ''),
                           _buildDetailRow('Certificate:',
                               experience['certificateName'] ?? ''),
+                          _buildDetailRow('Status:',
+                              experience['status'] ?? ''),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               IconButton(
-                                icon: Icon(Icons.edit,
-                                    color: Colors.blueAccent),
+                                icon: Icon(Icons.edit, color: Colors.blueAccent),
                                 onPressed: () {
-                                  setState(() {
-                                    selectedOrganizationId =
-                                    experience['organization'];
-                                    selectedDesignationId =
-                                    experience['designation'];
-                                    selectedMediumId =
-                                    experience['medium'];
-                                    selectedCertificateId =
-                                    experience['certificate'];
-                                    industryController.text =
-                                        experience['industry'] ?? '';
-                                    locationController.text =
-                                        experience['location'] ?? '';
-                                    dateFromController.text =
-                                        experience['dateFrom'] ?? '';
-                                    dateToController.text =
-                                        experience['dateTo'] ?? '';
-                                    empExpId = experience['empExpId'];
-                                    isEditing = true;
-                                  });
+                                  // Check if the status is "pending" or "Pending"
+                                  final String status = experience['status']?.toString() ?? '';
+
+                                  if (status.toLowerCase() == 'pending') {
+                                    // Show a toast message if the status is pending
+                                    Fluttertoast.showToast(
+                                      msg: "Changes sent for approval cannot be edited now",
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.BOTTOM,
+                                      backgroundColor: Colors.black,
+                                      textColor: Colors.white,
+                                      fontSize: 16.0,
+                                    );
+                                  } else {
+                                    // Allow editing if the status is not pending
+                                    setState(() {
+                                      selectedOrganizationId = experience['organization'];
+                                      selectedDesignationId = experience['designation'];
+                                      selectedMediumId = experience['medium'];
+                                      selectedCertificateId = experience['certificate'];
+                                      industryController.text = experience['industry'] ?? '';
+                                      locationController.text = experience['location'] ?? '';
+                                      dateFromController.text = experience['dateFrom'] ?? '';
+                                      dateToController.text = experience['dateTo'] ?? '';
+                                      empExpId = experience['empExpId'];
+                                      isEditing = true;
+                                    });
+                                  }
                                 },
                               ),
+
                             ],
                           ),
                         ],

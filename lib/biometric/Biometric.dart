@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_connect/http/src/_http/utils/body_decoder.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:percent_indicator/percent_indicator.dart'; // For progress indicators
+import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // For icons
+
 class BiometricDisplayScreen extends StatefulWidget {
-  const BiometricDisplayScreen({super.key});
+  const BiometricDisplayScreen({Key? key}) : super(key: key);
 
   @override
   State<BiometricDisplayScreen> createState() => _BiometricDisplayScreenState();
@@ -25,7 +30,13 @@ class _BiometricDisplayScreenState extends State<BiometricDisplayScreen> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.blue,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
 
+            ),
           ),
           child: child!,
         );
@@ -42,6 +53,9 @@ class _BiometricDisplayScreenState extends State<BiometricDisplayScreen> {
   }
 
   Future<void> _fetchBiometricData() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Fetch required preferences here...
+
     if (fromDate == null || toDate == null) return;
 
     setState(() {
@@ -51,21 +65,29 @@ class _BiometricDisplayScreenState extends State<BiometricDisplayScreen> {
     final String formattedFromDate = DateFormat('yyyy-MM-dd').format(fromDate!);
     final String formattedToDate = DateFormat('yyyy-MM-dd').format(toDate!);
 
-    final url = Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/BiometricDisplay');
+    final requestBody = {
+      "GrpCode": "Beesdev",
+      "ColCode": prefs.getString('colCode'),
+      "CollegeId": prefs.getString('collegeId'),
+      "EmployeeId": prefs.getInt('employeeId'),
+      "Fromdate": formattedFromDate,
+      "ToDate": formattedToDate,
+    };
+
+    print("Request body: ${jsonEncode(requestBody)}"); // Print request body here
+
+    final url = Uri.parse(
+        'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/BiometricDisplay');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "EmployeeId": "49",
-        "Fromdate": formattedFromDate,
-        "ToDate": formattedToDate,
-      }),
+      body: jsonEncode(requestBody),
     );
 
+    print(response);
+
     if (response.statusCode == 200) {
+      print(response.body);
       setState(() {
         biometricData = json.decode(response.body)['biometricDisplayList'] ?? [];
         isLoading = false;
@@ -80,61 +102,103 @@ class _BiometricDisplayScreenState extends State<BiometricDisplayScreen> {
     }
   }
 
+
   Widget _buildBiometricCard(Map<String, dynamic> data) {
-    return Card(
+    // Parse start and end times, handling possible null values
+    String startTimeStr = data['startTime'] ?? '--:--';
+    String endTimeStr = data['endTime'] ?? '--:--';
+    String date=data['date'];
 
-      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(25),
-      ),
-      elevation: 10,
-      child: Container(
-        decoration: BoxDecoration(color: Colors.white,
 
-          borderRadius: BorderRadius.circular(25),
+    // Calculate progress using the 'hours' field
+    double progress = 0.0;
+    if (data['hours'] != null) {
+      double totalHours = double.tryParse(data['hours'].toString()) ?? 0.0;
+      progress = totalHours / 8.5;
+      progress = progress.clamp(0.0, 1.0);
+    }
 
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Date
+          Text(
+              date,style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 6),
+          // Start and End Times
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Date: ${data['date'] ?? 'N/A'}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+              _buildTimeWithIcon(
+                FontAwesomeIcons.solidClock,
+                'Start Time',
+                startTimeStr,
+                Colors.green,
               ),
-              SizedBox(height: 10),
-              _buildFuturisticDetail('Start Time', data['startTime']),
-              _buildFuturisticDetail('End Time', data['endTime']),
-              _buildFuturisticDetail('Hours', data['hours'].toString()),
-              _buildFuturisticDetail('Description', data['description'] ?? 'N/A'),
+              _buildTimeWithIcon(
+                FontAwesomeIcons.solidClock,
+                'End Time',
+                endTimeStr,
+                Colors.redAccent,
+              ),
             ],
           ),
-        ),
+          SizedBox(height: 6),
+          // Progress Indicator
+          LinearPercentIndicator(
+            lineHeight: 16.0,
+            percent: progress,
+            backgroundColor: Colors.grey,
+            progressColor: Colors.green,
+            barRadius: Radius.circular(3),
+            center: progress > 0
+                ? Text(
+              '${(progress * 100).toStringAsFixed(1)}%',
+              style: TextStyle(fontSize: 10, color: Colors.white),
+            )
+                : null,
+          ),
+          SizedBox(height: 6),
+          // Total Hours
+          Text(
+            'Total Hours: ${data['hours'] ?? '0'} hrs',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+          Divider(),
+        ],
       ),
     );
   }
 
-  Widget _buildFuturisticDetail(String title, String? value) {
+  Widget _buildTimeWithIcon(
+      IconData icon, String label, String time, Color color) {
     return Row(
       children: [
+        FaIcon(
+          icon,
+          color: color,
+          size: 14,
+        ),
+        SizedBox(width: 4),
         Text(
-          '$title: ',
+          '$label: ',
           style: TextStyle(
-            fontSize: 18,
-            color: Colors.black,
+            fontSize: 12,
+            color: Colors.black87,
           ),
         ),
         Text(
-          value ?? 'N/A',
+          time,
           style: TextStyle(
-            fontSize: 18,
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
+            fontSize: 12,
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -145,8 +209,14 @@ class _BiometricDisplayScreenState extends State<BiometricDisplayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Biometric Data',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
-        iconTheme: IconThemeData(color: Colors.white),
+        title: Text(
+          'Biometric Data',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -156,42 +226,54 @@ class _BiometricDisplayScreenState extends State<BiometricDisplayScreen> {
             ),
           ),
         ),
+        elevation: 1,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
+      backgroundColor: Colors.white,
       body: isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.blueAccent))
+          ? Center(
+        child: CircularProgressIndicator(
+          color: Colors.blueAccent,
+        ),
+      )
           : Column(
         children: [
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => _selectDateRange(context),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-
-            ),
-            child: Text(
-              'Select Date Range',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Row(mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  onPressed: () => _selectDateRange(context),
+                  style: ElevatedButton.styleFrom(
+                    padding:
+                    EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Select Date Range',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
+
           Expanded(
             child: biometricData.isEmpty
                 ? Center(
               child: Text(
-                'No Data Available',
+                'Select Date Range',
                 style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-
+                  color: Colors.grey[700],
+                  fontSize: 16,
                 ),
               ),
             )

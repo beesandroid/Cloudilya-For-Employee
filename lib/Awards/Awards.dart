@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Awards extends StatefulWidget {
   const Awards({super.key});
@@ -88,15 +89,26 @@ class _AwardsState extends State<Awards> {
 
   // Fetch awards from the API
   Future<void> fetchAwards() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+
     const url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeAwards';
     final body = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "17051",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "AwardId": 0,
-      "UserId": 0,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "VIEW",
@@ -115,6 +127,7 @@ class _AwardsState extends State<Awards> {
         }
       ]
     };
+    print(body);
 
     final response = await http.post(
       Uri.parse(url),
@@ -178,15 +191,25 @@ class _AwardsState extends State<Awards> {
   }
 
   Future<void> createOrUpdateAward(String flag) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     const url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeAwards';
     final body = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "17051",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "AwardId": editingAwardId ?? 0,
-      "UserId": 1,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": flag,
@@ -529,8 +552,7 @@ class _AwardsState extends State<Awards> {
                         children: [
                           Text(
                               'Institute: ${award['instituteName'] ?? 'Unknown Institute'}'),
-                          Text(
-                              'Category: ${award['category'] ?? 'No Category'}'),
+
                           Text(
                               'Year: ${award['yearOfAward']?.toString() ?? 'Unknown Year'}'),
                           Text(
@@ -539,15 +561,33 @@ class _AwardsState extends State<Awards> {
                               'Country: ${award['countryName'] ?? 'Unknown Country'}'),
                           Text(
                               'State: ${award['stateName'] ?? 'Unknown State'}'),
+                          Text(
+                              'Status: ${award['status'] ?? 'Unknown State'}'),
                         ],
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () async {
-                          // When an award is selected for editing, populate the fields
-                          await populateFields(award);
+                          final String status = award['status']?.toString() ?? '';
+
+                          if (status.toLowerCase() == 'pending') {
+                            // Show a toast message if the award status is pending
+                            Fluttertoast.showToast(
+                              msg: "Changes sent for approval cannot be edited now",
+                              toastLength: Toast.LENGTH_LONG,
+                              gravity: ToastGravity.BOTTOM,
+                              timeInSecForIosWeb: 1,
+                              backgroundColor: Colors.black,
+                              textColor: Colors.white,
+                              fontSize: 16.0,
+                            );
+                          } else {
+                            // Allow editing if the status is not pending
+                            await populateFields(award);
+                          }
                         },
                       ),
+
                     ),
                   );
                 },

@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // For date formatting
 
 class EmployeeQualificationsScreen extends StatefulWidget {
   const EmployeeQualificationsScreen({Key? key}) : super(key: key);
@@ -14,6 +15,7 @@ class EmployeeQualificationsScreen extends StatefulWidget {
 
 class _EmployeeQualificationsScreenState
     extends State<EmployeeQualificationsScreen> {
+
   final String _apiUrl =
       'https://beessoftware.cloud/CoreAPIPreprod/CloudilyaMobileAPP/DisplayandSaveEmployeeQualifications';
   final String _dropdownApiUrl =
@@ -56,6 +58,7 @@ class _EmployeeQualificationsScreenState
 
   // Fetch Dropdown Data
   Future<void> fetchDropdownData() async {
+
     try {
       await fetchLookups(23, (data) {
         qualificationList = data['qualificationList'] ?? [];
@@ -114,19 +117,29 @@ class _EmployeeQualificationsScreenState
 
   // Fetch Qualifications (Read)
   Future<void> fetchQualifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     setState(() {
       _isLoading = true;
     });
 
     final Map<String, dynamic> requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
       "EmpQualId": 0,
-      "EmployeeId": "13",
+      "EmployeeId": employeeId,
       "StartDate": "",
       "EndDate": "",
-      "UserId": 1,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "VIEW",
@@ -193,6 +206,16 @@ class _EmployeeQualificationsScreenState
 
   // Create or Update Qualification
   Future<void> createOrUpdateQualification(String flag) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -213,12 +236,12 @@ class _EmployeeQualificationsScreenState
 
     final Map<String, dynamic> requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
       "EmpQualId": flag == "CREATE" ? 0 : _editingEmpQualId ?? 0,
-      "EmployeeId": "13",
+      "EmployeeId":employeeId ,
       "Flag": flag,
-      "UserId": "1",
+      "UserId": adminUserId,
       "StartDate": "",
       "EndDate": "",
       "LoginIpAddress": "",
@@ -546,12 +569,13 @@ class _EmployeeQualificationsScreenState
                         ),
                         subtitle: Text(
                           'Graduation Date: ${qualification['graduationDate'] ?? 'N/A'}\n'
-                              'Level: ${qualification['level'] ?? 'N/A'}\n'
+                              'Level: ${qualification['levelName'] ?? 'N/A'}\n'
                               'Specialization: ${qualification['specialization'] ?? 'N/A'}\n'
-                              'University: ${qualification['university'] ?? 'N/A'}\n'
+                              'University: ${qualification['universityName'] ?? 'N/A'}\n'
                               'Institution: ${qualification['institution'] ?? 'N/A'}\n'
                               'GPA: ${qualification['percentageOrGPA'] ?? 'N/A'}\n'
-                              'Division: ${qualification['division'] ?? 'N/A'}',
+                              'Division: ${qualification['division'] ?? 'N/A'}\n'
+                              'status: ${qualification['status'] ?? 'N/A'}',
                           style: const TextStyle(fontSize: 14),
                         ),
                         isThreeLine: true,
@@ -574,9 +598,11 @@ class _EmployeeQualificationsScreenState
   }
 
   // Build Dropdown Method
+// Build Dropdown Method
   Widget buildDropdown(String label, List<dynamic> list, int? selectedValue,
       ValueChanged<int?> onChanged) {
     return DropdownButtonFormField<int>(
+      isExpanded: true, // Ensures the dropdown takes up full width
       value: list.any((item) => item['lookUpId'] == selectedValue)
           ? selectedValue
           : null,
@@ -587,7 +613,10 @@ class _EmployeeQualificationsScreenState
       items: list.map((item) {
         return DropdownMenuItem<int>(
           value: item['lookUpId'],
-          child: Text(item['meaning'], overflow: TextOverflow.ellipsis),
+          child: Text(
+            item['meaning'],
+            overflow: TextOverflow.ellipsis, // Prevents text from overflowing
+          ),
         );
       }).toList(),
       onChanged: onChanged,
@@ -596,7 +625,24 @@ class _EmployeeQualificationsScreenState
     );
   }
 
+
   void populateForm(Map<String, dynamic> qualification) {
+    String status = qualification['status']?.toString() ?? '';
+
+    if (status.toLowerCase() == 'pending') {
+      // Show a toast message and prevent editing
+      Fluttertoast.showToast(
+        msg: "Changes sent for approval cannot be edited now.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return; // Prevent further actions if status is pending
+    }
+
+    // If the status is not "pending", populate the form for editing
     _editingEmpQualId = qualification['empQualId'];
     selectedQualification = qualification['qualificationId'];
     _graduationDateController.text = qualification['graduationDate'] ?? '';
@@ -608,8 +654,10 @@ class _EmployeeQualificationsScreenState
     selectedMedium = qualification['medium'];
     _gpaController.text = qualification['percentageOrGPA']?.toString() ?? '0.0';
     selectedDivision = qualification['division'];
+
     setState(() {
       _isEditing = true;
     });
   }
+
 }

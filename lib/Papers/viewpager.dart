@@ -1,4 +1,4 @@
-import 'package:cloudilyaemployee/Papers/Manual.dart';
+import 'package:cloudilyaforemployee/Papers/Manual.dart';
 import 'package:flutter/material.dart';
 
 import 'Conference.dart';

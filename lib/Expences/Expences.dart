@@ -4,6 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Expenses extends StatefulWidget {
   const Expenses({super.key});
 
@@ -12,10 +14,12 @@ class Expenses extends StatefulWidget {
 }
 
 class _ExpensesState extends State<Expenses> {
+
   List<dynamic> employeeExpensesList = [];
   bool isLoading = false;
 
   Map<String, dynamic> requestBody = {
+
     "GrpCode": "Beesdev",
     "ColCode": "0001",
     "CollegeId": "1",
@@ -31,23 +35,48 @@ class _ExpensesState extends State<Expenses> {
     "Flag": "VIEW"
   };
 
+
   @override
   void initState() {
     super.initState();
     _fetchExpenses('VIEW');
   }
-
   Future<void> _fetchExpenses(String flag,
       {Map<String, dynamic>? additionalParams}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType') ?? '';
+    final finYearId = prefs.getInt('finYearId') ?? 0;
+    final acYearId = prefs.getInt('acYearId') ?? 0;
+    final adminUserId = prefs.getString('adminUserId') ?? '';
+    final acYear = prefs.getString('acYear') ?? '';
+    final finYear = prefs.getString('finYear') ?? '';
+    final employeeId = prefs.getInt('employeeId') ?? 0;
+    final collegeId = prefs.getString('collegeId') ?? '';
+    final colCode = prefs.getString('colCode') ?? '';
+    print(requestBody);
+
     if (mounted) {
       setState(() {
         isLoading = true;
       });
     }
+
+    // Update requestBody with the SharedPreferences values
     requestBody['Flag'] = flag;
+    requestBody['ColCode'] = colCode;
+    requestBody['CollegeId'] = collegeId;
+    requestBody['EmployeeId'] = employeeId.toString();
+    requestBody['UserType'] = userType;
+    requestBody['FinYearId'] = finYearId.toString();
+    requestBody['AcYearId'] = acYearId.toString();
+    requestBody['AdminUserId'] = adminUserId;
+    requestBody['AcYear'] = acYear;
+    requestBody['FinYear'] = finYear;
+
     if (additionalParams != null) {
       requestBody.addAll(additionalParams);
     }
+
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIpreprod/CloudilyaMobileAPP/SelfServiceEmployeeExpences');
     try {
@@ -88,6 +117,7 @@ class _ExpensesState extends State<Expenses> {
       _showError('Network error: $e');
     }
   }
+
 
   void _showSnackbar(String message) {
     Fluttertoast.showToast(
@@ -133,7 +163,6 @@ class _ExpensesState extends State<Expenses> {
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          // Add StatefulBuilder to manage state within the dialog
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
               backgroundColor: Colors.white,
@@ -150,11 +179,9 @@ class _ExpensesState extends State<Expenses> {
                     _buildTextField(descriptionController, 'Description'),
                     const SizedBox(height: 10),
                     Text(
-                      'File: ${pickedFilePath?.split('/')?.last ?? 'No file selected'}',
+                      'File: ${pickedFilePath?.split('/').last ?? 'No file selected'}',
                       style: const TextStyle(fontSize: 16),
                     ),
-
-
                     const SizedBox(height: 10),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -164,6 +191,7 @@ class _ExpensesState extends State<Expenses> {
                         await FilePicker.platform.pickFiles();
                         if (result != null) {
                           setState(() {
+                            // Extract just the file name
                             pickedFilePath = result.files.single.path;
                           });
                         }
@@ -199,25 +227,25 @@ class _ExpensesState extends State<Expenses> {
                       "BillName": billNameController.text,
                       "BillDate": billDateController.text,
                       "Description": descriptionController.text,
-                      "FileName": pickedFilePath ??
-                          (expense != null
-                              ? expense['fileName']
-                              : requestBody['FileName']),
+                      "FileName": pickedFilePath != null
+                          ? pickedFilePath!.split('/').last // Send only the file name
+                          : (expense != null
+                          ? expense['fileName']
+                          : requestBody['FileName']),
                     };
 
                     requestBody['Amount'] = amountController.text;
                     requestBody['BillName'] = billNameController.text;
                     requestBody['BillDate'] = billDateController.text;
                     requestBody['Description'] = descriptionController.text;
-                    requestBody['FileName'] = pickedFilePath ??
-                        (expense != null
-                            ? expense['fileName']
-                            : requestBody['FileName']);
+                    requestBody['FileName'] = pickedFilePath != null
+                        ? pickedFilePath!.split('/').last // Send only the file name
+                        : (expense != null
+                        ? expense['fileName']
+                        : requestBody['FileName']);
 
-                    // Use 'CREATE' or 'OVERWRITE' based on the flag
                     _fetchExpenses(flag, additionalParams: updatedParams)
                         .then((_) {
-                      // Refresh the list after saving
                       _fetchExpenses('VIEW');
                     });
                   },
@@ -465,13 +493,27 @@ class _ExpensesState extends State<Expenses> {
                     ),
                   ],
                   onSelected: (value) {
+                    String status = expense['adminStatus']?.toString().toLowerCase() ?? '';
+
                     if (value == 'edit') {
-                      _showExpenseForm(context, 'OVERWRITE',
-                          expense: expense);
+                      if (status == 'pending') {
+                        // Show a toast message and prevent editing
+                        Fluttertoast.showToast(
+                          msg: "Changes sent for approval cannot be edited now.",
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.redAccent,
+                          textColor: Colors.white,
+                          fontSize: 16.0,
+                        );
+                      } else {
+                        _showExpenseForm(context, 'OVERWRITE', expense: expense);
+                      }
                     } else if (value == 'delete') {
                       _performDelete(expense);
                     }
                   },
+
                 ),
               ),
             ),

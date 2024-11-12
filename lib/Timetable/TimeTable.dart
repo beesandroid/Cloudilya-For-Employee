@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -26,12 +27,22 @@ class _EmployeeTimeTableScreenState extends State<EmployeeTimeTableScreen> {
   }
 
   Future<void> _fetchTimeTable({required String date}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     const url = 'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeTimeTableDisplay';
     final requestBody = {
       "GrpCode": "beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "49",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "ScheduleId": 0,
     };
 
@@ -65,13 +76,23 @@ class _EmployeeTimeTableScreenState extends State<EmployeeTimeTableScreen> {
   }
 
   Future<void> _callApiWithScheduleId(int scheduleId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     const url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeTimeTableDisplay';
     final requestBody = {
       "GrpCode": "beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "49",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "ScheduleId": scheduleId,
     };
 
@@ -168,27 +189,38 @@ class _EmployeeTimeTableScreenState extends State<EmployeeTimeTableScreen> {
 
 
   Future<void> _fetchTopics({
+
     required String programId,
     required String branchId,
     required int semId,
     required int regulationId,
     required String courseId,
   }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final url = 'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeTopicDropDown';
     final requestBody = {
       "GrpCode": "BEESdev",
       "ColCode": "0001",
       "CollegeId": "1",
-      "ProgramId":"1",
-      "BranchId":"2",
-      "SemId":1,
-      "RegulationId":1123,
-      "CourseId":"1466"
-      // "ProgramId": programId,
-      // "BranchId": branchId,
-      // "SemId": semId,
-      // "RegulationId": regulationId,
-      // "CourseId": courseId
+      // "ProgramId":"1",
+      // "BranchId":"2",
+      // "SemId":0,
+      // "RegulationId":1123,
+      // "CourseId":"1466"
+      "ProgramId": programId,
+      "BranchId": branchId,
+      "SemId": semId,
+      "RegulationId": regulationId,
+      "CourseId": courseId
     };
 
     try {

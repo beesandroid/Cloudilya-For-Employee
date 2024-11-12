@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'leave.dart';
 
@@ -133,18 +134,22 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
   void _validateDateRange() {
     if (_selectedLeaveType != null) {
       int selectedDays = _calculateSelectedDays();
-      double balance = _selectedLeaveType['balance'];
-      if (selectedDays > balance) {
-        _showErrorDialog(
-            'Selected date range exceeds the available balance of ${balance.toStringAsFixed(2)} days.');
-        _toDate = null;
+
+      // Check if the leave type is not LOP
+      if (_selectedLeaveType['absenceTypeName'] != 'LOP') {
+        double balance = _selectedLeaveType['balance'];
+        if (selectedDays > balance) {
+          _showErrorDialog(
+              'Selected date range exceeds the available balance of ${balance.toStringAsFixed(2)} days.');
+          _toDate = null;
+        }
       }
     }
   }
 
   bool _isFacultyDuplicate(Map<String, dynamic> faculty) {
     return _addedFacultyList.any((existingFaculty) =>
-    existingFaculty['date'] == faculty['date'] &&
+        existingFaculty['date'] == faculty['date'] &&
         existingFaculty['period'] == faculty['period'] &&
         existingFaculty['faculty'] == faculty['faculty'] &&
         existingFaculty['freeFaculty'] == faculty['freeFaculty'] &&
@@ -157,19 +162,19 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
         _selectedPeriod != null &&
         _selectedFaculty != null) {
       final selectedFaculty = facultyList.firstWhere(
-              (faculty) =>
-          faculty['date'] == _selectedDate &&
+          (faculty) =>
+              faculty['date'] == _selectedDate &&
               faculty['period'] == _selectedPeriod &&
               faculty['freeFacultyName'] == _selectedFaculty,
           orElse: () => {'freeFaculty': 'N/A'});
       final programDetails = programWiseDisplayList.firstWhere(
-              (program) =>
-          program['dates'] == _selectedDate &&
+          (program) =>
+              program['dates'] == _selectedDate &&
               program['period'] == _selectedPeriod,
           orElse: () => {
-            'startTime': 'N/A',
-            'endTime': 'N/A',
-          });
+                'startTime': 'N/A',
+                'endTime': 'N/A',
+              });
 
       final newFaculty = {
         'date': _selectedDate!,
@@ -203,7 +208,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(backgroundColor: Colors.white,
+        return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text('Error'),
           content: Text(message),
           actions: [
@@ -248,9 +254,9 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
       if (canAdd) {
         for (var application in _leaveApplications) {
           DateTime existingFromDate =
-          DateFormat('yyyy-MM-dd').parse(application['FromDate']);
+              DateFormat('yyyy-MM-dd').parse(application['FromDate']);
           DateTime existingToDate =
-          DateFormat('yyyy-MM-dd').parse(application['ToDate']);
+              DateFormat('yyyy-MM-dd').parse(application['ToDate']);
           if (!(_toDate!.isBefore(existingFromDate) ||
               _fromDate!.isAfter(existingToDate))) {
             canAdd = false;
@@ -271,7 +277,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
           'LeaveDuration': _calculateSelectedDays(),
           'Reason': _reasonController.text,
           'leavename': _selectedLeaveType.toString(),
-          '_attachmentPath':_attachmentPath,
+          '_attachmentPath': _attachmentPath,
 
           'AccrualPeriodName': _selectedLeaveType!['accrualPeriodName'],
           'Accrued': _selectedLeaveType!['accrued'],
@@ -279,7 +285,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
         };
         print('Selected Leave Type: ${_selectedLeaveType!['absenceTypeName']}');
         setState(() {
-          _attachmentPath=null;
+          _attachmentPath = null;
           _leaveApplications.add(leaveApplication);
           _selectedLeaveType = null;
           _reasonController.clear();
@@ -291,18 +297,28 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
   }
 
   void _continueWithAdjustment() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final requestBody = {
       "GrpCode": "bees",
-      "CollegeId": 1,
-      "ColCode": "0001",
-      "EmployeeId": 2,
+      "CollegeId": collegeId,
+      "ColCode": colCode,
+      "EmployeeId": employeeId,
       "ApplicationId": 0,
       "Flag": "REVIEW",
-      "UserId": 759,
-      "AttachFile": "",
+      "UserId": adminUserId,
+      "AttachFile": _attachmentPath,
       "Reason": _reasonController.text,
       "LeaveApplicationSaveTablevariable":
-      _leaveApplications.map((application) {
+          _leaveApplications.map((application) {
         return {
           "AbsenceId": application['leaveId'],
           "FromDate": application['FromDate'],
@@ -342,7 +358,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
           "You are trying to apply for more leave days than your available balance/usage allows") {
         Fluttertoast.showToast(
           msg:
-          "You are trying to apply for more leave days than your available balance allows.",
+              "You are trying to apply for more leave days than your available balance allows.",
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.black,
@@ -352,9 +368,9 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
       } else {
         setState(() {
           datesList =
-          List<Map<String, dynamic>>.from(parsedResponse['datesMultiList']);
+              List<Map<String, dynamic>>.from(parsedResponse['datesMultiList']);
           periodsList =
-          List<Map<String, dynamic>>.from(parsedResponse['periodsList']);
+              List<Map<String, dynamic>>.from(parsedResponse['periodsList']);
           facultyList = List<Map<String, dynamic>>.from(
               parsedResponse['facultyDropdownList']);
           programWiseDisplayList = List<Map<String, dynamic>>.from(
@@ -398,17 +414,28 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
   }
 
   void _applyLeave() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+
     var dateFormat = DateFormat('yyyy-MM-dd'); // Define the output date format
     var inputDateFormat = DateFormat('dd-MM-yyyy');
     var payload = {
       "GrpCode": "Beesdev",
-      "CollegeId": "1",
-      "ColCode": "0001",
-      "EmployeeId": "2",
+      "CollegeId": collegeId,
+      "ColCode": colCode,
+      "EmployeeId": employeeId,
       "ApplicationId": "0",
       "Flag": "CREATE",
-      "UserId": "1",
-      "AttachFile": "",
+      "UserId": adminUserId,
+      "AttachFile": _attachmentPath,
       "Reason": _reasonController.text,
       "SaveLeaveApplicationEmployee": _addedFacultyList.map((faculty) {
         DateTime parsedDate = inputDateFormat.parse(faculty['date']);
@@ -420,14 +447,13 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
           "EndTime": faculty['endTime'],
           "Periods": faculty['period'],
           "Date": formattedDate,
-          "Faculty": "2",
+          "Faculty": employeeId,
           "FreeFaculty": faculty['freeFaculty']
         };
       }).toList(),
       "LeaveApplicationSaveTablevariable":
-      _leaveApplications.map((application) {
+          _leaveApplications.map((application) {
         return {
-
           "leavename": application['absenceName'], // Directly use the leaveId
           "AbsenceId": application['leaveId'], // Directly use the leaveId
           "FromDate": application['FromDate'],
@@ -538,7 +564,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
         children: [
           Expanded(
               child:
-              Text(label, style: TextStyle(fontWeight: FontWeight.bold))),
+                  Text(label, style: TextStyle(fontWeight: FontWeight.bold))),
           Text(value, style: TextStyle(color: Colors.blueAccent)),
         ],
       ),
@@ -555,11 +581,9 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child:
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           DropdownButtonFormField<dynamic>(
             decoration: InputDecoration(
               labelText: 'Select Leave Type',
@@ -585,20 +609,18 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
           ),
           if (_selectedLeaveType != null) ...[
             SizedBox(height: 16.0),
-            Container(width: double.maxFinite,
+            Container(
+              width: double.maxFinite,
               margin: EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-
               ),
-              child:
-              Material(
+              child: Material(
                 elevation: 15,
                 color: Colors.white,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -610,7 +632,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                           children: [
                             TextSpan(
                                 text: '${_selectedLeaveType!['leaveId']}',
-                                style: TextStyle(fontWeight: FontWeight.normal)),
+                                style:
+                                    TextStyle(fontWeight: FontWeight.normal)),
                           ],
                         ),
                       ),
@@ -624,8 +647,10 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                               color: Colors.black, fontWeight: FontWeight.bold),
                           children: [
                             TextSpan(
-                                text: '${_selectedLeaveType!['accrualPeriodName']}',
-                                style: TextStyle(fontWeight: FontWeight.normal)),
+                                text:
+                                    '${_selectedLeaveType!['accrualPeriodName']}',
+                                style:
+                                    TextStyle(fontWeight: FontWeight.normal)),
                           ],
                         ),
                       ),
@@ -640,7 +665,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                           children: [
                             TextSpan(
                                 text: '${_selectedLeaveType!['accrued']}',
-                                style: TextStyle(fontWeight: FontWeight.normal)),
+                                style:
+                                    TextStyle(fontWeight: FontWeight.normal)),
                           ],
                         ),
                       ),
@@ -654,8 +680,10 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                               color: Colors.black, fontWeight: FontWeight.bold),
                           children: [
                             TextSpan(
-                                text: '${_selectedLeaveType!['absenceTypeName']}',
-                                style: TextStyle(fontWeight: FontWeight.normal)),
+                                text:
+                                    '${_selectedLeaveType!['absenceTypeName']}',
+                                style:
+                                    TextStyle(fontWeight: FontWeight.normal)),
                           ],
                         ),
                       ),
@@ -670,7 +698,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                           children: [
                             TextSpan(
                                 text: '${_selectedLeaveType!['accrualPeriod']}',
-                                style: TextStyle(fontWeight: FontWeight.normal)),
+                                style:
+                                    TextStyle(fontWeight: FontWeight.normal)),
                           ],
                         ),
                       ),
@@ -685,7 +714,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                           children: [
                             TextSpan(
                                 text: '${_selectedLeaveType!['balance']}',
-                                style: TextStyle(fontWeight: FontWeight.normal)),
+                                style:
+                                    TextStyle(fontWeight: FontWeight.normal)),
                           ],
                         ),
                       ),
@@ -694,10 +724,6 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                 ),
               ),
             )
-
-
-
-
           ],
           SizedBox(height: 16.0),
           TextField(
@@ -723,7 +749,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                   _fromDate == null
                       ? 'Select From Date'
                       : DateFormat.yMd().format(_fromDate!),
-                  style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold),
                 ),
               ),
               ElevatedButton(
@@ -750,7 +777,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                   _toDate == null
                       ? 'Select To Date'
                       : DateFormat.yMd().format(_toDate!),
-                  style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold),
                 ),
               ),
               ElevatedButton(
@@ -791,8 +819,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
           RichText(
             text: TextSpan(
               text: 'Selected Days: ',
-              style: TextStyle(
-                  color: Colors.black, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               children: [
                 TextSpan(
                     text: '${_calculateSelectedDays()}',
@@ -805,10 +833,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             onPressed: () async {
               // File picker logic
-              String? path = (await FilePicker.platform.pickFiles())
-                  ?.files
-                  .first
-                  .path;
+              String? path =
+                  (await FilePicker.platform.pickFiles())?.files.first.path;
               if (path != null) {
                 setState(() {
                   _attachmentPath = path; // Store the selected path
@@ -819,14 +845,14 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                 style: TextStyle(color: Colors.white)),
           ),
           SizedBox(height: 16.0),
-    Text(
-    _attachmentPath != null
-    ? 'Selected Attachment: $_attachmentPath'
-        : 'No Attachment Selected',
-    style: TextStyle(
-    fontSize: 14,
-    ),
-    ),
+          Text(
+            _attachmentPath != null
+                ? 'Selected Attachment: $_attachmentPath'
+                : 'No Attachment Selected',
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
           SizedBox(height: 16.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -862,7 +888,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                 print('Leave ID: ${application['leaveId']}');
                 print('absenceName: ${application['absenceName']}');
 
-                return Material(color: Colors.white,
+                return Material(
+                  color: Colors.white,
                   elevation: 4,
                   shadowColor: Colors.black.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8.0),
@@ -890,7 +917,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                                   TextSpan(
                                     text: '${application['absenceName']}',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.normal,color: Colors.black),
+                                        fontWeight: FontWeight.normal,
+                                        color: Colors.black),
                                   ),
                                 ],
                               ),
@@ -905,23 +933,23 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                                   TextSpan(
                                     text: '${application['leaveId']}',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.normal,color: Colors.black),
+                                        fontWeight: FontWeight.normal,
+                                        color: Colors.black),
                                   ),
                                 ],
                               ),
                             ),
-
                           ],
                         ),
                         subtitle: RichText(
                           text: TextSpan(
                             text:
-                            'From: ${application['FromDate']} - To: ${application['ToDate']}\n',
+                                'From: ${application['FromDate']} - To: ${application['ToDate']}\n',
                             style: TextStyle(color: Colors.black),
                             children: [
                               TextSpan(
                                 text:
-                                'Duration: ${application['LeaveDuration']} days\n',
+                                    'Duration: ${application['LeaveDuration']} days\n',
                                 style: TextStyle(fontWeight: FontWeight.normal),
                               ),
                               TextSpan(
@@ -1034,8 +1062,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                   value: _selectedFaculty,
                   items: facultyList
                       .where((faculty) =>
-                  faculty['date'] == _selectedDate &&
-                      faculty['period'] == _selectedPeriod)
+                          faculty['date'] == _selectedDate &&
+                          faculty['period'] == _selectedPeriod)
                       .map((faculty) {
                     return DropdownMenuItem<String>(
                       value: faculty['freeFacultyName'],
@@ -1081,7 +1109,8 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                 itemCount: _addedFacultyList.length,
                 itemBuilder: (context, index) {
                   final faculty = _addedFacultyList[index];
-                  return Card(color: Colors.white,
+                  return Card(
+                    color: Colors.white,
                     margin: EdgeInsets.symmetric(vertical: 8.0),
                     elevation: 4,
                     child: ListTile(
@@ -1095,7 +1124,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                               TextSpan(
                                   text: '${faculty['date']}',
                                   style:
-                                  TextStyle(fontWeight: FontWeight.normal)),
+                                      TextStyle(fontWeight: FontWeight.normal)),
                             ],
                           ),
                         ),
@@ -1107,20 +1136,20 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                               TextSpan(
                                   text: 'Faculty: ${faculty['faculty']}\n',
                                   style:
-                                  TextStyle(fontWeight: FontWeight.normal)),
+                                      TextStyle(fontWeight: FontWeight.normal)),
                               TextSpan(
                                   text:
-                                  'Free Faculty: ${faculty['freeFaculty']}\n',
+                                      'Free Faculty: ${faculty['freeFaculty']}\n',
                                   style:
-                                  TextStyle(fontWeight: FontWeight.normal)),
+                                      TextStyle(fontWeight: FontWeight.normal)),
                               TextSpan(
                                   text: 'Start Time: ${faculty['startTime']}\n',
                                   style:
-                                  TextStyle(fontWeight: FontWeight.normal)),
+                                      TextStyle(fontWeight: FontWeight.normal)),
                               TextSpan(
                                   text: 'End Time: ${faculty['endTime']}',
                                   style:
-                                  TextStyle(fontWeight: FontWeight.normal)),
+                                      TextStyle(fontWeight: FontWeight.normal)),
                             ],
                           ),
                         ),
@@ -1131,9 +1160,7 @@ class _LeaveApplicationScreenState extends State<LeaveApplicationScreen> {
                               _addedFacultyList.removeAt(index);
                             });
                           },
-                        )
-
-                    ),
+                        )),
                   );
                 },
               ),

@@ -3,6 +3,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Conference extends StatefulWidget {
   @override
   _ConferenceState createState() => _ConferenceState();
@@ -64,6 +66,16 @@ class _ConferenceState extends State<Conference> {
   }
 
   Future<void> fetchConferenceData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     try {
       final response = await http.post(
         Uri.parse(
@@ -73,11 +85,11 @@ class _ConferenceState extends State<Conference> {
         },
         body: jsonEncode({
           "GrpCode": "Beesdev",
-          "ColCode": "0001",
-          "CollegeId": "1",
-          "EmployeeId": "17051",
+          "ColCode": colCode,
+          "CollegeId": collegeId,
+          "EmployeeId": employeeId,
           "Id": 0,
-          "UserId": 1,
+          "UserId": adminUserId,
           "LoginIpAddress": "",
           "LoginSystemName": "",
           "Flag": "VIEW",
@@ -135,14 +147,24 @@ class _ConferenceState extends State<Conference> {
   }
 
   Future<void> saveConferenceData({required String flag, String? id}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     if (_formKey.currentState!.validate()) {
       final requestBody = {
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "EmployeeId": "17051",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "EmployeeId": employeeId,
         "Id": id != null ? int.parse(id) : 0,
-        "UserId": 1,
+        "UserId": adminUserId,
         "LoginIpAddress": "",
         "LoginSystemName": "",
         "Flag": flag,
@@ -391,16 +413,33 @@ class _ConferenceState extends State<Conference> {
                       subtitle: Text(
                           'Date: ${conference['date'] ?? 'N/A'}\n'
                               'Organized by: ${conference['organizingInstitutions'] ?? 'N/A'}\n'
-                              'Location: ${conference['placeOfConference'] ?? 'N/A'}'),
+                              'Location: ${conference['placeOfConference'] ?? 'N/A'} \nStatus: ${conference['status'] ?? 'N/A'}'),
                       trailing: IconButton(
                         icon: Icon(
                           Icons.edit,
                           color: Colors.blue,
                         ),
                         onPressed: () {
-                          fillFieldsForEdit(index);
+                          // Assuming there is a status field in the conference data
+                          final String status = conference['status']?.toString() ?? '';
+
+                          if (status.toLowerCase() == 'pending') {
+                            // Show a toast message if the status is pending
+                            Fluttertoast.showToast(
+                              msg: "Changes sent for approval cannot be edited now",
+                              toastLength: Toast.LENGTH_LONG,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: Colors.black,
+                              textColor: Colors.white,
+                              fontSize: 16.0,
+                            );
+                          } else {
+                            // Allow editing if the status is not pending
+                            fillFieldsForEdit(index);
+                          }
                         },
                       ),
+
                     ),
                   );
                 },

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'MaterialUploading.dart';
 
@@ -20,28 +21,39 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
   }
 
   Future<void> _fetchEmployeeMaterialData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+
     final response = await http.post(
       Uri.parse(
           'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeMaterialUploading'),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": 1,
-        "UserId": 1,
-        "Id": 1,
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "UserId": adminUserId,
+        "Id": 0,
         "Batch": "",
-        "TopicId": 159,
-        "ChooseFile": "23148_Regular.pdf",
+        "TopicId": 0,
+        "ChooseFile": "23148",
         "UpdatedDate": "2024-09-18",
-        "EmployeeId": 3,
-        "ProgramId": 51,
-        "BranchId": 62,
-        "SemId": 47,
+        "EmployeeId": employeeId,
+        "ProgramId": 0,
+        "BranchId": 0,
+        "SemId": 0,
         "SectionId": 0,
-        "CourseId": 1556,
+        "CourseId": 0,
         "MaterialType": 0,
-        "Unit": "5652",
+        "Unit": "0",
         "LoginIpAddress": "",
         "LoginSystemName": "",
         "Flag": "VIEW"
@@ -63,12 +75,22 @@ class _EmployeeMaterialScreenState extends State<EmployeeMaterialScreen> {
 
   Future<void> _deleteEmployeeMaterial(
       int id, int topicId, String updatedDate, String ChooseFile) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final requestBody = json.encode({
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": 1,
-      "EmployeeId": 3,
-      "UserId": 1,
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
+      "UserId": adminUserId,
       "UpdatedDate": updatedDate,
       "ChooseFile": ChooseFile,
       "TopicId": topicId,

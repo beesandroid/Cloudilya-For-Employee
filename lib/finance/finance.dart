@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FinanceScreen extends StatefulWidget {
   @override
@@ -18,6 +19,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 
   Future<void> _fetchData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final Uri apiUrl = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/FinancePayIncometaxDisplay');
     final headers = {
@@ -25,12 +36,12 @@ class _FinanceScreenState extends State<FinanceScreen> {
     };
     final requestBody = jsonEncode({
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "1088",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "Year": "0",
       "Month": "0",
-      "FinYear": "2024 - 2025"
+      "FinYear": finYear
     });
 
     try {

@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:multi_select_flutter/chip_display/multi_select_chip_display.dart';
 import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
 import 'package:multi_select_flutter/util/multi_select_item.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 class AttendanceScreen extends StatefulWidget {
   @override
   _AttendanceScreenState createState() => _AttendanceScreenState();
@@ -896,6 +897,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   Future<void> _fetchAttendanceData(String formattedDate) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final String url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/FacultyDailyAttendanceDisplay';
     final DateTime now = DateTime.now();
@@ -903,13 +914,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     final Map<String, dynamic> requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
+      "ColCode": colCode,
       "Date": formattedDate,
       "ProgramId": "0",
       "BranchId": "0",
       "SemId": "0",
       "SectionId": "0",
-      "EmployeeId": "1088",
+      "EmployeeId": employeeId.toString(),
       "Perioddisplay": "0",
       "Flag": "FacultyWise",
       "CurrentDatetime": currentDatetime
@@ -976,6 +987,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   Future<void> _fetchAndPrintTopics(String formattedDate) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final periodNumber =
         int.tryParse(_selectedPeriod!.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     final String url =
@@ -983,10 +1004,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
     final Map<String, dynamic> requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "EmployeeId": "1088",
+      "ColCode": colCode,
+      "EmployeeId": employeeId,
       "Period": periodNumber,
-      "Date": "2024-07-01"
+      "Date": _selectedDate
     };
     print("Request Body: ${requestBody.toString()}");
 
@@ -1030,6 +1051,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   Future<void> _saveAttendance() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+
     final String url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/SaveFacultyWiseAttendance';
 
@@ -1076,11 +1108,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
     final Map<String, dynamic> requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "1088",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId.toString(),
       "Date": formattedDate,
-      "UserId": "1",
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "FacultyWiseAttendenceTableVariable": studentsList,

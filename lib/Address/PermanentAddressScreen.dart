@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PermanentAddressScreen extends StatefulWidget {
   const PermanentAddressScreen({super.key});
@@ -31,16 +34,26 @@ class _PermanentAddressScreenState extends State<PermanentAddressScreen> {
   }
 
   Future<void> _fetchTemporaryAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse(
           'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeAddressesPermanentDetails'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
         "AddressId": 0,
-        "EmployeeId": "17051",
+        "EmployeeId": employeeId,
         "StartDate": "",
         "EndDate": "",
         "EffectiveDate": "",
@@ -55,7 +68,7 @@ class _PermanentAddressScreenState extends State<PermanentAddressScreen> {
         "District": "",
         "State": "",
         "Country": "",
-        "UserId": 1,
+        "UserId": adminUserId,
         "LoginIpAddress": "",
         "LoginSystemName": "",
         "Flag": "VIEW"
@@ -84,15 +97,25 @@ class _PermanentAddressScreenState extends State<PermanentAddressScreen> {
   }
 
   Future<void> _saveTemporaryAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     // If the response is empty, set the flag to "CREATE", otherwise "OVERWRITE"
     final String flag = _isCreateMode ? "CREATE" : "OVERWRITE";
 
     final requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "AddressId": _addressData["addressId"],
-      "EmployeeId": "17051",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "AddressId": _addressData["addressId"]??0,
+      "EmployeeId": employeeId,
       "StartDate": "",
       "EndDate": "",
       "EffectiveDate": DateTime.now().toIso8601String().split('T').first,
@@ -107,7 +130,7 @@ class _PermanentAddressScreenState extends State<PermanentAddressScreen> {
       "District": _addressData["district"] ?? "",
       "State": _addressData["state"] ?? "",
       "Country": _addressData["country"] ?? "",
-      "UserId": 1,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": flag
@@ -157,14 +180,30 @@ class _PermanentAddressScreenState extends State<PermanentAddressScreen> {
                 IconButton(
                   icon: Icon(_isEditing ? Icons.save : Icons.edit),
                   onPressed: () {
-                    if (_isEditing) {
-                      _saveTemporaryAddress();
+                    final String status = _addressData['status']?.toString() ?? '';
+
+                    // Check if the status is "pending" or "Pending"
+                    if (status.toLowerCase() == 'pending') {
+                      // Show a toast message if the status is pending
+                      Fluttertoast.showToast(
+                        msg: "Changes sent for approval cannot be edited now",
+                        toastLength: Toast.LENGTH_LONG,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.black,
+                        textColor: Colors.white,
+                        fontSize: 16.0,
+                      );
+                    } else {
+                      if (_isEditing) {
+                        _saveTemporaryAddress();
+                      }
+                      setState(() {
+                        _isEditing = !_isEditing;
+                      });
                     }
-                    setState(() {
-                      _isEditing = !_isEditing;
-                    });
                   },
                 ),
+
               ],
             ),
             SizedBox(height: 10),

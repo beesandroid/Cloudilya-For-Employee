@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class PayAllotment extends StatefulWidget {
   const PayAllotment({Key? key}) : super(key: key);
 
@@ -20,14 +22,24 @@ class _PayAllotmentState extends State<PayAllotment> with SingleTickerProviderSt
   }
 
   Future<void> _fetchPayAllotmentData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/PayAllotmentDisplay'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "EmployeeId": "1088",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "EmployeeId": employeeId,
         "EffectiveDate": "",
         "PayAllotId": 0,
         "Flag": "VIEW"

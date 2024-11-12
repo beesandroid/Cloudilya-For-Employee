@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BankDetails extends StatefulWidget {
   const BankDetails({super.key});
@@ -32,15 +33,25 @@ class _BankDetailsState extends State<BankDetails> {
   }
 
   Future<void> fetchBankDetails() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveBankDetails');
     final body = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
       "Id": 0,
       "EffectiveDate": "",
-      "EmployeeId": "17051",
+      "EmployeeId": employeeId,
       "ProcessingOrder": 0,
       "PayType": 0,
       "Bank": 0,
@@ -48,7 +59,7 @@ class _BankDetailsState extends State<BankDetails> {
       "IFSCCode": "",
       "PhoneNumber": "",
       "ChangeReason": "",
-      "UserId": 2,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "VIEW"
@@ -60,22 +71,32 @@ class _BankDetailsState extends State<BankDetails> {
       });
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print(data);
         setState(() {
-          bankDetails = data['displayandSaveBankDetailsList'] != null
-              ? data['displayandSaveBankDetailsList'][0]
-              : null;
+          if (data['displayandSaveBankDetailsList'] != null &&
+              data['displayandSaveBankDetailsList'].isNotEmpty) {
+            bankDetails = data['displayandSaveBankDetailsList'][0];
+            isEditing = false;
+            _initializeTextFields();
+          } else {
+            // No bank details found, switch to create mode
+            bankDetails = null;
+            isEditing = true;
+            _clearTextFields();
+          }
           isLoading = false;
-          _initializeTextFields();
         });
       } else {
         setState(() {
           isLoading = false;
         });
+        _showError('Failed to fetch bank details. Status Code: ${response.statusCode}');
       }
     } catch (e) {
       setState(() {
         isLoading = false;
       });
+      _showError('Network error: $e');
     }
   }
 
@@ -88,6 +109,15 @@ class _BankDetailsState extends State<BankDetails> {
       selectedBank = bankDetails!['bankFullName'] ?? null;
       selectedPaymentType = bankDetails!['paymentTypeName'] ?? null;
     }
+  }
+
+  void _clearTextFields() {
+    _accountController.clear();
+    _ifscController.clear();
+    _phoneController.clear();
+    _reasonController.clear();
+    selectedBank = null;
+    selectedPaymentType = null;
   }
 
   Future<void> fetchBankNames() async {
@@ -109,8 +139,12 @@ class _BankDetailsState extends State<BankDetails> {
         setState(() {
           bankList = data['bankNameDopDownList'];
         });
+      } else {
+        _showError('Failed to fetch bank names. Status Code: ${response.statusCode}');
       }
-    } catch (e) {}
+    } catch (e) {
+      _showError('Network error while fetching bank names: $e');
+    }
   }
 
   Future<void> fetchPaymentTypes() async {
@@ -131,44 +165,65 @@ class _BankDetailsState extends State<BankDetails> {
         setState(() {
           paymentTypeList = data['paymentType'];
         });
+      } else {
+        _showError('Failed to fetch payment types. Status Code: ${response.statusCode}');
       }
     } catch (e) {
-      // Handle error
+      _showError('Network error while fetching payment types: $e');
     }
   }
+
   Future<void> saveBankDetails() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveBankDetails');
 
     // Find the selected payment type ID
-    final selectedPayTypeId = selectedPaymentType != null
-        ? paymentTypeList.firstWhere((type) => type['meaning'] == selectedPaymentType)['lookUpId']
-        : bankDetails?['payType'];  // Default to existing payType if none is selected
+    final selectedPayType = paymentTypeList.firstWhere(
+            (type) => type['meaning'] == selectedPaymentType,
+        orElse: () => null);
+    final selectedPayTypeId =
+    selectedPayType != null ? selectedPayType['lookUpId'] : 0;
+
+    // Find the selected bank ID
+    final selectedBankItem = bankList.firstWhere(
+            (bank) => bank['meaning'] == selectedBank,
+        orElse: () => null);
+    final selectedBankId = selectedBankItem != null ? selectedBankItem['lookUpId'] : 0;
+
+    // Determine the flag
+    String flag = bankDetails == null ? "CREATE" : "OVERWRITE";
 
     final body = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
       "Id": bankDetails?['id'] ?? 0,
       "EffectiveDate": bankDetails?['effectiveDate'] ?? "",
-      "EmployeeId": "17051",
+      "EmployeeId": employeeId,
       "ProcessingOrder": bankDetails?['processingOrder'] ?? 0,
-      "PayType": selectedPayTypeId,  // Use the mapped payType ID
-      "Bank": selectedBank != null
-          ? bankList
-          .firstWhere((bank) => bank['meaning'] == selectedBank)['lookUpId']
-          : bankDetails?['bank'],
+      "PayType": selectedPayTypeId, // Use the mapped payType ID
+      "Bank": selectedBankId, // Use the mapped bank ID
       "AccountNo": _accountController.text,
       "IFSCCode": _ifscController.text,
       "PhoneNumber": _phoneController.text,
       "ChangeReason": _reasonController.text,
-      "UserId": 2,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
-      "Flag": "OVERWRITE"
+      "Flag": flag
     };
 
-    print(body);  // You can debug the body to ensure values are correctly mapped
+    print(body); // Debug the body to ensure values are correctly mapped
 
     try {
       final response = await http.post(url, body: jsonEncode(body), headers: {
@@ -178,25 +233,50 @@ class _BankDetailsState extends State<BankDetails> {
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
 
-        Fluttertoast.showToast(
-          msg: responseBody['message'],
-          toastLength: Toast.LENGTH_LONG, // or Toast.LENGTH_SHORT
-          gravity: ToastGravity.BOTTOM, // can be TOP, CENTER, or BOTTOM
-          timeInSecForIosWeb: 1, // duration for iOS Web
-          backgroundColor: Colors.black, // background color of the toast
-          textColor: Colors.white, // text color of the toast
-          fontSize: 16.0, // font size
-        );
+        String message = responseBody['message'] ?? 'Operation successful';
+
+        // Show appropriate toast based on the flag
+        if (flag == "CREATE") {
+          _showSuccess(message);
+        } else {
+          _showSuccess(message);
+        }
+
         setState(() {
           isEditing = false;
         });
-        fetchBankDetails();  // Refresh after saving
+        fetchBankDetails(); // Refresh after saving
+      } else {
+        _showError('Failed to save bank details. Status Code: ${response.statusCode}');
       }
     } catch (e) {
-      // Handle exception
+      _showError('Network error while saving bank details: $e');
     }
   }
 
+  void _showError(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.red, // Red for errors
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  }
+
+  void _showSuccess(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.green, // Green for success
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -211,22 +291,41 @@ class _BankDetailsState extends State<BankDetails> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          if (!isLoading && selectedBank != null)
+          if (!isLoading)
             IconButton(
               icon: Icon(
                 isEditing ? Icons.save : Icons.edit,
                 color: Colors.white,
               ),
               onPressed: () {
-                if (isEditing) {
-                  saveBankDetails();
+                final String status = bankDetails?['status']?.toString() ?? '';
+
+                // Check if the status is "pending" (case-insensitive check)
+                if (status.toLowerCase() == 'pending') {
+                  // Show a toast message if the status is pending
+                  Fluttertoast.showToast(
+                    msg: "Changes sent for approval cannot be edited now",
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.black,
+                    textColor: Colors.white,
+                    fontSize: 16.0,
+                  );
                 } else {
-                  setState(() {
-                    isEditing = true;
-                  });
+                  if (isEditing) {
+                    // Validate inputs before saving
+                    if (_validateInputs()) {
+                      saveBankDetails();
+                    }
+                  } else {
+                    setState(() {
+                      isEditing = true;
+                    });
+                  }
                 }
               },
             ),
+
         ],
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -242,65 +341,114 @@ class _BankDetailsState extends State<BankDetails> {
         decoration: BoxDecoration(),
         child: isLoading
             ? Center(child: CircularProgressIndicator())
-            : selectedBank == null
-                ? Center(child: Text('No bank details found.'))
-                : Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildDropdownField(
-                              'Bank Name', selectedBank, bankList, (value) {
-                            setState(() {
-                              selectedBank = value;
-                            });
-                          }),
-                          SizedBox(height: 16.0),
-                          _buildDropdownField('Payment Type',
-                              selectedPaymentType, paymentTypeList, (value) {
-                            setState(() {
-                              selectedPaymentType = value;
-                            });
-                          }),
-                          SizedBox(height: 16.0),
-                          AnimatedSwitcher(
-                            duration: Duration(milliseconds: 500),
-                            child: selectedPaymentType != 'Cash'
-                                ? Column(
-                                    key: ValueKey(selectedPaymentType),
-                                    children: [
-                                      _buildEditableField(
-                                          'Account No', _accountController),
-                                      _buildEditableField(
-                                          'IFSC Code', _ifscController),
-                                      _buildEditableField(
-                                          'Phone Number', _phoneController),
-                                      _buildEditableField(
-                                          'Change Reason', _reasonController),
-                                    ],
-                                  )
-                                : SizedBox.shrink(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+            : Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDropdownField(
+                    'Bank Name', selectedBank, bankList, (value) {
+                  if (isEditing) {
+                    setState(() {
+                      selectedBank = value;
+                    });
+                  }
+                }, isEnabled: isEditing),
+                SizedBox(height: 16.0),
+                _buildDropdownField('Payment Type',
+                    selectedPaymentType, paymentTypeList, (value) {
+                      if (isEditing) {
+                        setState(() {
+                          selectedPaymentType = value;
+                        });
+                      }
+                    }, isEnabled: isEditing),
+                SizedBox(height: 16.0),
+                AnimatedSwitcher(
+                  duration: Duration(milliseconds: 500),
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                  },
+                  child: (isEditing &&
+                      selectedPaymentType != null &&
+                      selectedPaymentType != 'Cash')
+                      ? Column(
+                    key: ValueKey('textFields'),
+                    children: [
+                      _buildEditableField(
+                          'Account No', _accountController,
+                          isEnabled: isEditing),
+                      SizedBox(height: 16.0),
+                      _buildEditableField(
+                          'IFSC Code', _ifscController,
+                          isEnabled: isEditing),
+                      SizedBox(height: 16.0),
+                      _buildEditableField(
+                          'Phone Number', _phoneController,
+                          isEnabled: isEditing),
+                      SizedBox(height: 16.0),
+                      _buildEditableField(
+                          'Change Reason', _reasonController,
+                          isEnabled: isEditing),
+                    ],
+                  )
+                      : SizedBox.shrink(),
+                ),
+                if (isEditing && bankDetails == null) ...[
+                  // In create mode, ensure text fields are shown based on payment type
+                  // Already handled by the AnimatedSwitcher above
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildDropdownField(String label, String? selectedValue,
-      List<dynamic> items, ValueChanged<String?> onChanged) {
-    // Debug print statements
-    // print('Selected Value: $selectedValue');
-    // print('Dropdown Items: ${items.map((item) => item['meaning']).toList()}');
+  bool _validateInputs() {
+    if (selectedBank == null || selectedBank!.isEmpty) {
+      _showError('Please select a bank.');
+      return false;
+    }
+    if (selectedPaymentType == null || selectedPaymentType!.isEmpty) {
+      _showError('Please select a payment type.');
+      return false;
+    }
+    if (selectedPaymentType != 'Cash') {
+      if (_accountController.text.isEmpty) {
+        _showError('Please enter your account number.');
+        return false;
+      }
+      if (_ifscController.text.isEmpty) {
+        _showError('Please enter your IFSC code.');
+        return false;
+      }
+      if (_phoneController.text.isEmpty) {
+        _showError('Please enter your phone number.');
+        return false;
+      }
+      if (_reasonController.text.isEmpty) {
+        _showError('Please provide a reason for changes.');
+        return false;
+      }
+    }
+    return true;
+  }
 
+  Widget _buildDropdownField(String label, String? selectedValue,
+      List<dynamic> items, ValueChanged<String?> onChanged,
+      {bool isEnabled = true}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isEnabled ? Colors.white : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(15.0),
           boxShadow: [
             BoxShadow(
@@ -314,13 +462,13 @@ class _BankDetailsState extends State<BankDetails> {
           value: selectedValue,
           items: items
               .map<DropdownMenuItem<String>>((item) => DropdownMenuItem<String>(
-                    value: item['meaning'],
-                    child: Text(item['meaning'],
-                        style:
-                            TextStyle(fontSize: 16.0, color: Colors.black87)),
-                  ))
+            value: item['meaning'],
+            child: Text(item['meaning'],
+                style:
+                TextStyle(fontSize: 16.0, color: Colors.black87)),
+          ))
               .toList(),
-          onChanged: isEditing ? onChanged : null,
+          onChanged: isEnabled ? onChanged : null,
           decoration: InputDecoration(
             labelText: label,
             labelStyle: TextStyle(color: Colors.blueAccent),
@@ -331,17 +479,19 @@ class _BankDetailsState extends State<BankDetails> {
             contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
           ),
           dropdownColor: Colors.white,
+          disabledHint: Text(selectedValue ?? ''),
         ),
       ),
     );
   }
 
-  Widget _buildEditableField(String label, TextEditingController controller) {
+  Widget _buildEditableField(String label, TextEditingController controller,
+      {bool isEnabled = true}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isEnabled ? Colors.white : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(15.0),
           boxShadow: [
             BoxShadow(
@@ -353,7 +503,7 @@ class _BankDetailsState extends State<BankDetails> {
         ),
         child: TextField(
           controller: controller,
-          enabled: isEditing,
+          enabled: isEnabled,
           style: TextStyle(
             color: Colors.black87,
             fontSize: 16.0,
@@ -374,7 +524,7 @@ class _BankDetailsState extends State<BankDetails> {
             ),
             contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: isEnabled ? Colors.white : Colors.grey.shade200,
           ),
         ),
       ),

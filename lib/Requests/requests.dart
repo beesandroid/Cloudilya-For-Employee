@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Requests extends StatefulWidget {
   const Requests({super.key});
 
@@ -35,6 +37,16 @@ class _RequestsState extends State<Requests> {
   }
 
   Future<void> _fetchAdjustmentData(String flag) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     setState(() {
       _isLoading = true;
     });
@@ -44,12 +56,12 @@ class _RequestsState extends State<Requests> {
 
     final Map<String, dynamic> requestBody = {
       "GrpCode": "BEESdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "3",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "ApplicationId": "0",
       "AdjustmentId": "0",
-      "UserId": "759",
+      "UserId": adminUserId,
       "Flag": flag
     };
     print(requestBody);
@@ -65,6 +77,7 @@ class _RequestsState extends State<Requests> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print(data);
         setState(() {
           _adjustmentData = List<Map<String, dynamic>>.from(data['multiList']);
         });

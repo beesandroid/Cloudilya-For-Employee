@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Dependents extends StatefulWidget {
   const Dependents({super.key});
@@ -28,17 +29,27 @@ class _DependentsState extends State<Dependents> {
   }
 
   Future<void> fetchDependents() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeDependents';
     final response = await http.post(Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "GrpCode": "Beesdev",
-          "ColCode": "0001",
+          "ColCode": colCode,
           "DependentId": 0,
-          "CollegeId": 1,
-          "EmployeeId": "17051",
-          "UserId": "1",
+          "CollegeId": collegeId,
+          "EmployeeId": employeeId,
+          "UserId": adminUserId,
           "LoginIpAddress": "",
           "LoginSystemName": "",
           "Flag": "VIEW",
@@ -336,52 +347,7 @@ class _DependentsState extends State<Dependents> {
                 ),
                 SizedBox(height: 10),
                 // Association Details & End Date
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: associationDetailsController,
-                        decoration: InputDecoration(
-                          labelText: 'Association Details',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: endDateController,
-                        decoration: InputDecoration(
-                          labelText: 'End Date',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          isDense: true,
-                          suffixIcon: Icon(Icons.calendar_today, size: 20),
-                        ),
-                        readOnly: true,
-                        onTap: () async {
-                          DateTime? pickedDate = await showDatePicker(
-                            context: context,
-                            initialDate: dependent == null
-                                ? DateTime.now()
-                                : DateTime.parse(dependent['endDate']),
-                            firstDate: DateTime(1900),
-                            lastDate: DateTime.now(),
-                          );
-                          if (pickedDate != null) {
-                            endDateController.text =
-                            "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
+
                 // Action Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -470,15 +436,26 @@ class _DependentsState extends State<Dependents> {
       String associationDetails,
       String endDate,
       ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+
     final url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeDependents';
     final requestBody = jsonEncode({
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
+      "ColCode": colCode,
       "DependentId": 0,
-      "CollegeId": 1,
-      "EmployeeId": "17051",
-      "UserId": "1",
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "CREATE",
@@ -499,6 +476,7 @@ class _DependentsState extends State<Dependents> {
         }
       ]
     });
+    print("sssss"+requestBody);
 
     final response = await http.post(
       Uri.parse(url),
@@ -544,15 +522,25 @@ class _DependentsState extends State<Dependents> {
       String associationDetails,
       String endDate,
       ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final url =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeDependents';
     final requestBody = jsonEncode({
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
+      "ColCode": colCode,
       "DependentId": 0, // This may be redundant if using dependentId directly
-      "CollegeId": 1,
-      "EmployeeId": "17051",
-      "UserId": "1",
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "OVERWRITE",
@@ -832,8 +820,27 @@ class _DependentsState extends State<Dependents> {
                   ),
                   trailing: IconButton(
                     icon: Icon(Icons.edit, color: Colors.blueAccent),
-                    onPressed: () => showDependentForm(dependent: dependent),
+                    onPressed: () {
+                      // Check if the status is "pending" or "Pending"
+                      final String status = dependent['status']?.toString() ?? '';
+
+                      if (status.toLowerCase() == 'pending') {
+                        // Show a toast message if the status is pending
+                        Fluttertoast.showToast(
+                          msg: "Changes sent for approval cannot be edited now",
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                          fontSize: 16.0,
+                        );
+                      } else {
+                        // Allow editing if the status is not pending
+                        showDependentForm(dependent: dependent);
+                      }
+                    },
                   ),
+
                 ),
               ),
             );

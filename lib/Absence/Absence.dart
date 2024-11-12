@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Absence extends StatefulWidget {
   const Absence({super.key});
@@ -20,6 +21,16 @@ class _AbsenceState extends State<Absence> with SingleTickerProviderStateMixin {
   }
 
   Future<void> fetchEmployeeLeaves() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/SaveEmployeeLeaves');
     final response = await http.post(
@@ -29,9 +40,9 @@ class _AbsenceState extends State<Absence> with SingleTickerProviderStateMixin {
       },
       body: jsonEncode({
         "GrpCode": "beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "EmployeeId": "2",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "EmployeeId": employeeId,
         "LeaveId": "0",
         "Description": "",
         "Balance": "0",
@@ -52,6 +63,16 @@ class _AbsenceState extends State<Absence> with SingleTickerProviderStateMixin {
   }
 
   Future<void> fetchLeaveDetails(String leaveId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final url = Uri.parse(
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/SaveEmployeeLeaves');
     final response = await http.post(
@@ -61,9 +82,9 @@ class _AbsenceState extends State<Absence> with SingleTickerProviderStateMixin {
       },
       body: jsonEncode({
         "GrpCode": "beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "EmployeeId": "2",
+        "ColCode": colCode,
+        "CollegeId":collegeId,
+        "EmployeeId": employeeId,
         "LeaveId": leaveId,
         "Description": "",
         "Balance": "0",

@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Funding extends StatefulWidget {
   const Funding({super.key});
 
@@ -38,15 +40,27 @@ class _FundingState extends State<Funding> {
   }
 
   Future<void> _fetchProjects() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+
+
     final response = await http.post(
       Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeFundedProjects'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "UserId": 1,
-        "EmployeeId": "49",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "UserId": adminUserId,
+        "EmployeeId": employeeId,
         "ProjectTittleId": 0,
         "LoginIpAddress": "",
         "LoginSystemName": "",
@@ -85,15 +99,25 @@ class _FundingState extends State<Funding> {
     }
   }
   Future<void> _addProject() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayandSaveEmployeeFundedProjects'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "UserId": 1,
-        "EmployeeId": "49",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "UserId": adminUserId,
+        "EmployeeId": employeeId,
         "ProjectTittleId": 0,
         "LoginIpAddress": "",
         "LoginSystemName": "",
@@ -235,14 +259,24 @@ class _FundingState extends State<Funding> {
   }
 
   Future<void> _updateProject() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     if (_selectedProjectId == null) return;
 
     final requestBody = jsonEncode({
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "UserId": 1,
-      "EmployeeId": "49",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "UserId": adminUserId,
+      "EmployeeId": employeeId,
       "ProjectTittleId": _selectedProjectId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
@@ -387,10 +421,29 @@ class _FundingState extends State<Funding> {
                   ),
                   trailing: IconButton(
                     icon: Icon(Icons.edit, color: Colors.blueAccent, size: 28),
-                    onPressed: () => _editProject(project['projectTittleId']),
+                    onPressed: () {
+                      // Check if the approve status is "pending" or "Pending"
+                      final String status = project['approveStatus']?.toString() ?? '';
+
+                      if (status.toLowerCase() == 'pending') {
+                        // Show a toast message if the status is pending
+                        Fluttertoast.showToast(
+                          msg: "Changes sent for approval cannot be edited now",
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                          fontSize: 16.0,
+                        );
+                      } else {
+                        // Allow editing if the status is not pending
+                        _editProject(project['projectTittleId']);
+                      }
+                    },
                     splashRadius: 25, // Larger splash for interaction effect
                     tooltip: "Edit Project",
                   ),
+
                 ),
               ),
             ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model.dart';
 
@@ -99,15 +100,27 @@ class _TaxBenefitsState extends State<TaxBenefits> {
   }
 
   Future<List<dynamic>> fetchTaxBenefits() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
+
+
     const String apiUrl =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeTaxBenifits';
     Map<String, dynamic> requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "17051",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "Id": 0,
-      "UserId": 1,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": "VIEW",
@@ -146,15 +159,25 @@ class _TaxBenefitsState extends State<TaxBenefits> {
       double usage,
       String attachment,
       int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     const String apiUrl =
         'https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/EmployeeTaxBenifits';
     Map<String, dynamic> requestBody = {
       "GrpCode": "Beesdev",
-      "ColCode": "0001",
-      "CollegeId": "1",
-      "EmployeeId": "17051",
+      "ColCode": colCode,
+      "CollegeId": collegeId,
+      "EmployeeId": employeeId,
       "Id": id,
-      "UserId": 1,
+      "UserId": adminUserId,
       "LoginIpAddress": "",
       "LoginSystemName": "",
       "Flag": flag,
@@ -210,10 +233,7 @@ class _TaxBenefitsState extends State<TaxBenefits> {
     double maxLimit = double.tryParse(maxLimitController.text) ?? 0.0;
     double usage = double.tryParse(usageController.text) ?? 0.0;
 
-    String attachmentBase64 = '';
-    if (_attachmentPath != null) {
-      attachmentBase64 = await _convertFileToBase64(_attachmentPath!);
-    }
+
 
     addOrEditTaxBenefit(
       'CREATE',
@@ -221,7 +241,7 @@ class _TaxBenefitsState extends State<TaxBenefits> {
       section,
       maxLimit,
       usage,
-      attachmentBase64,
+      _attachmentPath!,
       0, // ID is 0 for new entries
     );
     deductionNameController.clear();
@@ -389,7 +409,7 @@ class _TaxBenefitsState extends State<TaxBenefits> {
                             ],
                           ),
                           child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 20),
                             title: Text(
                               benefit['deductionName']?.toString() ?? 'No Deduction Name',
                               style: TextStyle(
@@ -411,21 +431,40 @@ class _TaxBenefitsState extends State<TaxBenefits> {
                                 Text('Proof: ${benefit['proofName']?.toString() ?? 'N/A'}'),
                                 SizedBox(height: 5),
                                 Text('Attachment: ${benefit['attachment']?.toString() ?? 'N/A'}'),
+                                SizedBox(height: 5),
+                                Text('Status: ${benefit['status']?.toString() ?? 'N/A'}'),
                               ],
                             ),
                             trailing: IconButton(
                               icon: Icon(Icons.edit, color: Colors.blue.shade600),
                               onPressed: () {
-                                setState(() {
-                                  deductionNameController.text = benefit['deductionName']?.toString() ?? '';
-                                  maxLimitController.text = benefit['maxLimit']?.toString() ?? '';
-                                  usageController.text = benefit['usage']?.toString() ?? '';
-                                  selectedDeductionId = benefit['deductionId'];
-                                  selectedSectionId = benefit['sectionId'];
-                                  _attachmentPath = benefit['attachment'];
-                                });
+                                final String status = benefit['status']?.toString() ?? '';
+
+                                if (status.toLowerCase() == 'pending') {
+                                  // Show a toast message if status is pending
+                                  Fluttertoast.showToast(
+                                    msg: "Changes sent for approval cannot be edited now",
+                                    toastLength: Toast.LENGTH_LONG,
+                                    gravity: ToastGravity.BOTTOM,
+                                    timeInSecForIosWeb: 1,
+                                    backgroundColor: Colors.black,
+                                    textColor: Colors.white,
+                                    fontSize: 16.0,
+                                  );
+                                } else {
+                                  // Allow editing if status is not pending
+                                  setState(() {
+                                    deductionNameController.text = benefit['deductionName']?.toString() ?? '';
+                                    maxLimitController.text = benefit['maxLimit']?.toString() ?? '';
+                                    usageController.text = benefit['usage']?.toString() ?? '';
+                                    selectedDeductionId = benefit['deductionId'];
+                                    selectedSectionId = benefit['sectionId'];
+                                    _attachmentPath = benefit['attachment'];
+                                  });
+                                }
                               },
                             ),
+
                           ),
                         ),
                       );

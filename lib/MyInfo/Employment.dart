@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Employment extends StatefulWidget {
   const Employment({super.key});
 
@@ -20,15 +22,25 @@ class _EmploymentState extends State<Employment> {
   }
 
   Future<void> _fetchEmploymentData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('userType');
+    final finYearId = prefs.getInt('finYearId');
+    final acYearId = prefs.getInt('acYearId');
+    final adminUserId = prefs.getString('adminUserId');
+    final acYear = prefs.getString('acYear');
+    final finYear = prefs.getString('finYear');
+    final employeeId = prefs.getInt('employeeId');
+    final collegeId = prefs.getString('collegeId');
+    final colCode = prefs.getString('colCode');
     final response = await http.post(
       Uri.parse('https://beessoftware.cloud/CoreAPIPreProd/CloudilyaMobileAPP/DisplayEmployeeEmployement'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         "GrpCode": "Beesdev",
-        "ColCode": "0001",
-        "CollegeId": "1",
-        "UserId": "1",
-        "EmployeeId": "1088",
+        "ColCode": colCode,
+        "CollegeId": collegeId,
+        "UserId": adminUserId,
+        "EmployeeId": employeeId,
         "EmploymentId": "0",
         "Department": "0",
         "StartDate": "",
